@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dryrun-agents"
+version = "0.1.0"
+description = "Simulation-based testing harness for multi-agent LangGraph systems"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0,<3.0",
+    "click>=8.0,<9.0",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "openai>=1.0",
+    "langgraph>=0.2",
+    "langchain-openai>=0.1",
+    "langchain-core>=0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-timeout>=2.2",
+    "mypy>=1.8",
+    "ruff>=0.3",
+]
+
+[project.scripts]
+dryrun = "dryrun.adapters.inbound.cli.commands:cli"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
