@@ -6,7 +6,7 @@ from dryrun.domain.ports.llm import LLMPort
 
 
 class AnthropicClient(LLMPort):
-    def __init__(self, model: str = "claude-sonnet-4-20250514", api_key: str | None = None):
+    def __init__(self, model: str = "claude-sonnet-4-6", api_key: str | None = None):
         self._model = model
         self._client = AsyncAnthropic(api_key=api_key)
 
@@ -36,6 +36,10 @@ class AnthropicClient(LLMPort):
         # Ensure first message is from user (Anthropic requirement)
         if not merged or merged[0]["role"] != "user":
             merged.insert(0, {"role": "user", "content": "Hello"})
+
+        # Ensure last message is from user (Claude 4.6+ doesn't support assistant prefill)
+        if merged and merged[-1]["role"] == "assistant":
+            merged.append({"role": "user", "content": "Continue."})
 
         kwargs: dict = {
             "model": self._model,

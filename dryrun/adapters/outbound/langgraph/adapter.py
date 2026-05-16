@@ -94,24 +94,45 @@ class LangGraphAdapter(AgentPort):
 
         # The last non-tool AI message is the visible output
         for msg in reversed(messages):
-            if hasattr(msg, "content") and msg.content:
+            content = self._get_text_content(msg)
+            if content:
                 if getattr(msg, "type", None) == "ai" and not getattr(msg, "tool_calls", None):
-                    visible_parts.insert(0, msg.content)
+                    visible_parts.insert(0, content)
                     break
 
         # Full output = all AI message contents
         for msg in messages:
-            if hasattr(msg, "content") and msg.content and getattr(msg, "type", None) == "ai":
-                full_parts.append(msg.content)
+            content = self._get_text_content(msg)
+            if content and getattr(msg, "type", None) == "ai":
+                full_parts.append(content)
 
         output_text = "\n".join(full_parts) or ""
         visible_output_text = "\n".join(visible_parts) or output_text
 
         return output_text, visible_output_text, tool_calls
 
+    @staticmethod
+    def _get_text_content(msg) -> str:
+        """Extract text from a message, handling both str and list content formats."""
+        content = getattr(msg, "content", None)
+        if content is None:
+            return ""
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            # Anthropic returns content as a list of blocks: [{"type": "text", "text": "..."}]
+            parts = []
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    parts.append(block.get("text", ""))
+                elif isinstance(block, str):
+                    parts.append(block)
+            return "\n".join(parts)
+        return str(content)
+
     def _estimate_tokens(self, messages: list) -> int:
         """Rough token estimate based on message content length."""
-        total_chars = sum(len(getattr(msg, "content", "") or "") for msg in messages)
+        total_chars = sum(len(self._get_text_content(msg)) for msg in messages)
         return total_chars // 4
 
     def _serialize_state(self, state: dict) -> dict:

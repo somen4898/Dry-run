@@ -97,7 +97,7 @@ def _get_llm():
     if provider == "anthropic":
         from langchain_anthropic import ChatAnthropic
 
-        model = os.environ.get("DRYRUN_AGENT_MODEL", "claude-sonnet-4-20250514")
+        model = os.environ.get("DRYRUN_AGENT_MODEL", "claude-sonnet-4-6")
         _llm = ChatAnthropic(model=model, temperature=0)
     else:
         from langchain_openai import ChatOpenAI
@@ -107,62 +107,66 @@ def _get_llm():
     return _llm
 
 
+def _sanitize_messages(messages: list) -> list:
+    """Strip trailing assistant messages to avoid prefill errors on Claude 4.6+.
+
+    Claude 4.6 models dropped assistant message prefill support. After tool
+    execution, LangGraph's message history can end with an AI message. The
+    Anthropic API rejects this. We append a minimal user message to fix the
+    sequence.
+    """
+    from langchain_core.messages import HumanMessage
+
+    if messages and getattr(messages[-1], "type", None) == "ai":
+        return [*messages, HumanMessage(content="Continue.")]
+    return list(messages)
+
+
+_TRIAGE_SYSTEM = (
+    "You are a triage agent. Based on the user's message, decide:\n"
+    "- If about purchasing, browsing, cart: respond with ONLY 'ROUTE:sales'\n"
+    "- If about order status, refunds, issues: respond with ONLY 'ROUTE:support'\n"
+    "- Otherwise: respond helpfully and ask for clarification."
+)
+
+_SALES_SYSTEM = (
+    "You are a sales agent. Help the customer find products, "
+    "manage their cart, and complete purchases. Be helpful and concise."
+)
+
+_SUPPORT_SYSTEM = (
+    "You are a customer support agent. Help with order status, "
+    "refunds, and issues. Be empathetic and efficient."
+)
+
+
 def triage_agent(state: AgentState) -> dict:
     """Route to sales or support based on user intent."""
-    messages = state["messages"]
+    from langchain_core.messages import SystemMessage
+
+    messages = _sanitize_messages([SystemMessage(content=_TRIAGE_SYSTEM), *state["messages"]])
     llm = _get_llm()
-    response = llm.invoke(
-        [
-            {
-                "role": "system",
-                "content": (
-                    "You are a triage agent. Based on the user's message, decide:\n"
-                    "- If about purchasing, browsing, cart: respond with 'ROUTE:sales'\n"
-                    "- If about order status, refunds, issues: respond with 'ROUTE:support'\n"
-                    "- Otherwise: respond helpfully and ask for clarification."
-                ),
-            },
-            *messages,
-        ]
-    )
+    response = llm.invoke(messages)
     return {"messages": [response], "current_agent": "triage"}
 
 
 def sales_agent(state: AgentState) -> dict:
     """Handle sales-related queries."""
-    messages = state["messages"]
+    from langchain_core.messages import SystemMessage
+
+    messages = _sanitize_messages([SystemMessage(content=_SALES_SYSTEM), *state["messages"]])
     llm = _get_llm()
-    response = llm.bind_tools(sales_tools).invoke(
-        [
-            {
-                "role": "system",
-                "content": (
-                    "You are a sales agent. Help the customer find products, "
-                    "manage their cart, and complete purchases. Be helpful and concise."
-                ),
-            },
-            *messages,
-        ]
-    )
+    response = llm.bind_tools(sales_tools).invoke(messages)
     return {"messages": [response], "current_agent": "sales"}
 
 
 def support_agent_node(state: AgentState) -> dict:
     """Handle support-related queries."""
-    messages = state["messages"]
+    from langchain_core.messages import SystemMessage
+
+    messages = _sanitize_messages([SystemMessage(content=_SUPPORT_SYSTEM), *state["messages"]])
     llm = _get_llm()
-    response = llm.bind_tools(support_tools).invoke(
-        [
-            {
-                "role": "system",
-                "content": (
-                    "You are a customer support agent. Help with order status, "
-                    "refunds, and issues. Be empathetic and efficient."
-                ),
-            },
-            *messages,
-        ]
-    )
+    response = llm.bind_tools(support_tools).invoke(messages)
     return {"messages": [response], "current_agent": "support"}
 
 

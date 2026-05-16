@@ -9,8 +9,8 @@ import yaml
 
 class ModelConfig(BaseModel):
     provider: Literal["openai", "anthropic"] = "anthropic"
-    synthetic_user: str = "claude-sonnet-4-20250514"
-    agent: str = "claude-sonnet-4-20250514"
+    synthetic_user: str = "claude-sonnet-4-6"
+    agent: str = "claude-sonnet-4-6"
 
 
 class DryRunConfig(BaseModel):
