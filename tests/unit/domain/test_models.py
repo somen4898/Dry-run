@@ -67,3 +67,68 @@ class TestScenario:
         )
         assert s.golden is True
         assert "smoke" in s.tags
+
+
+from dryrun.domain.models.trace import ToolCall, AgentTurn, Trace
+
+
+class TestToolCall:
+    def test_create(self):
+        tc = ToolCall(
+            tool_name="search_inventory",
+            arguments={"query": "laptop"},
+            output={"results": [{"name": "ThinkPad"}]},
+            latency_ms=150,
+        )
+        assert tc.tool_name == "search_inventory"
+
+
+class TestAgentTurn:
+    def test_visible_output_separate_from_output(self):
+        turn = AgentTurn(
+            turn_number=1,
+            agent_id="support",
+            input_text="Hi",
+            output_text="[internal reasoning] Hello! How can I help?",
+            tool_calls=[],
+            state_before={},
+            state_after={"greeted": True},
+            latency_ms=500,
+            tokens_used=100,
+            visible_output_text="Hello! How can I help?",
+        )
+        assert turn.visible_output_text != turn.output_text
+        assert "[internal" not in turn.visible_output_text
+
+
+class TestTrace:
+    def test_empty_trace(self):
+        t = Trace(
+            scenario_id="test-001",
+            turns=[],
+            final_state={},
+            total_turns=0,
+            total_tokens=0,
+            total_latency_ms=0,
+            terminal_reason="max_turns",
+        )
+        assert t.terminal_reason == "max_turns"
+
+    def test_trace_with_turns(self):
+        turn = AgentTurn(
+            turn_number=1, agent_id="support",
+            input_text="Hi", output_text="Hello!",
+            tool_calls=[], state_before={}, state_after={},
+            latency_ms=200, tokens_used=50,
+            visible_output_text="Hello!",
+        )
+        t = Trace(
+            scenario_id="test-001",
+            turns=[turn],
+            final_state={"done": True},
+            total_turns=1, total_tokens=50,
+            total_latency_ms=200,
+            terminal_reason="goal_met",
+        )
+        assert len(t.turns) == 1
+        assert t.turns[0].agent_id == "support"
