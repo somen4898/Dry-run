@@ -8,6 +8,10 @@ from pathlib import Path
 import click
 import yaml
 from rich.console import Console
+
+# Ensure current working directory is on sys.path so user's agent modules are importable
+if "" not in sys.path and "." not in sys.path:
+    sys.path.insert(0, "")
 from rich.table import Table
 
 from dryrun.config import DryRunConfig

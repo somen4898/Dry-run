@@ -5,5 +5,5 @@ scenarios_dir: "example/scenarios/"
 models:
   # Change 'provider' to switch everything at once: "anthropic" or "openai"
   provider: "anthropic"
-  synthetic_user: "claude-sonnet-4-20250514"
-  agent: "claude-sonnet-4-20250514"
+  synthetic_user: "claude-3-5-sonnet-20241022"
+  agent: "claude-3-5-sonnet-20241022"
