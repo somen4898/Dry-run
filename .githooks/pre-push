@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "Running lint checks before push..."
+python3 -m ruff check . || { echo "Lint failed. Fix with: ruff check . --fix"; exit 1; }
+python3 -m ruff format --check . || { echo "Format check failed. Fix with: ruff format ."; exit 1; }
+echo "Lint passed."
