@@ -18,11 +18,11 @@ Tools:
 """
 
 from __future__ import annotations
+import os
 import operator
 from typing import Annotated, Sequence, TypedDict
 from langchain_core.messages import BaseMessage
 from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
@@ -84,13 +84,26 @@ def initiate_refund(order_id: str, reason: str) -> dict:
 sales_tools = [search_inventory, add_to_cart, update_cart, process_checkout]
 support_tools = [check_order_status, initiate_refund]
 
-_llm: ChatOpenAI | None = None
+_llm = None
 
 
-def _get_llm() -> ChatOpenAI:
+def _get_llm():
+    """Lazy-init the LLM based on environment. Defaults to Anthropic."""
     global _llm
-    if _llm is None:
-        _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    if _llm is not None:
+        return _llm
+
+    provider = os.environ.get("DRYRUN_LLM_PROVIDER", "anthropic")
+    if provider == "anthropic":
+        from langchain_anthropic import ChatAnthropic
+
+        model = os.environ.get("DRYRUN_AGENT_MODEL", "claude-sonnet-4-20250514")
+        _llm = ChatAnthropic(model=model, temperature=0)
+    else:
+        from langchain_openai import ChatOpenAI
+
+        model = os.environ.get("DRYRUN_AGENT_MODEL", "gpt-4o-mini")
+        _llm = ChatOpenAI(model=model, temperature=0)
     return _llm
 
 

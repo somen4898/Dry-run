@@ -28,4 +28,6 @@ class TestDryRunConfig:
             agent_object="compiled_graph",
         )
         assert config.scenarios_dir == "scenarios/"
-        assert config.models.synthetic_user == "gpt-4o-mini"
+        assert config.models.provider == "anthropic"
+        assert config.models.synthetic_user == "claude-sonnet-4-20250514"
+        assert config.models.agent == "claude-sonnet-4-20250514"

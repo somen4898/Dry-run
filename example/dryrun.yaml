@@ -1,5 +1,9 @@
 agent_module: "example.agent.support_agent"
 agent_object: "compiled_graph"
 scenarios_dir: "example/scenarios/"
+
 models:
-  synthetic_user: "gpt-4o-mini"
+  # Change 'provider' to switch everything at once: "anthropic" or "openai"
+  provider: "anthropic"
+  synthetic_user: "claude-sonnet-4-20250514"
+  agent: "claude-sonnet-4-20250514"

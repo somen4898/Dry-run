@@ -14,7 +14,7 @@ from dryrun.config import DryRunConfig
 from dryrun.domain.models.scenario import Scenario
 from dryrun.application.run_suite import RunSuiteUseCase
 from dryrun.adapters.outbound.langgraph.adapter import LangGraphAdapter
-from dryrun.adapters.outbound.openai.llm import OpenAIClient
+from dryrun.adapters.outbound.llm_factory import create_llm
 
 console = Console()
 
@@ -62,10 +62,16 @@ def run(scenario_path: str, config_path: str | None):
         console.print(f"[red]Failed to load agent: {e}[/red]")
         sys.exit(1)
 
-    # Wire adapters
+    # Wire adapters — provider comes from config, not hardcoded
     agent_port = LangGraphAdapter(graph)
-    llm_port = OpenAIClient(model=config.models.synthetic_user)
+    llm_port = create_llm(config.models, purpose="synthetic_user")
     runner = RunSuiteUseCase(agent_port=agent_port, llm_port=llm_port)
+
+    # Set env vars so the sample agent uses the same provider
+    import os
+
+    os.environ.setdefault("DRYRUN_LLM_PROVIDER", config.models.provider)
+    os.environ.setdefault("DRYRUN_AGENT_MODEL", config.models.agent)
 
     # Run
     console.print(f"\n[bold]Running scenario:[/bold] {scenario.name}")

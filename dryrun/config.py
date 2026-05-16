@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 from pathlib import Path
+from typing import Literal
 from pydantic import BaseModel
 import yaml
 
 
 class ModelConfig(BaseModel):
-    synthetic_user: str = "gpt-4o-mini"
+    provider: Literal["openai", "anthropic"] = "anthropic"
+    synthetic_user: str = "claude-sonnet-4-20250514"
+    agent: str = "claude-sonnet-4-20250514"
 
 
 class DryRunConfig(BaseModel):
