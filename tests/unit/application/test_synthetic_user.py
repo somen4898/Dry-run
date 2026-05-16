@@ -51,7 +51,7 @@ class TestSyntheticUser:
         llm = MockLLMPort(["response"])
         user = SyntheticUser(persona=persona, llm=llm)
         prompt = user._build_system_prompt()
-        assert "incremental" in prompt.lower()
+        assert "do not state your full goal" in prompt.lower() or "state only your immediate need" in prompt.lower()
         assert persona.goal in prompt
 
     def test_system_prompt_evasive_strategy(self):
@@ -63,7 +63,7 @@ class TestSyntheticUser:
         llm = MockLLMPort(["response"])
         user = SyntheticUser(persona=persona, llm=llm)
         prompt = user._build_system_prompt()
-        assert "evasive" in prompt.lower()
+        assert "do not volunteer information" in prompt.lower()
 
     def test_persona_drift_check_passes_good_message(self, persona):
         llm = MockLLMPort(["yes"])
