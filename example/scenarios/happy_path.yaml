@@ -1,0 +1,29 @@
+id: happy-path-001
+name: "Happy path - laptop purchase"
+description: "User successfully purchases a laptop through the support agent"
+persona:
+  goal: "Buy a budget laptop for college"
+  tone: "polite"
+  knowledge_level: "novice"
+  background: "College freshman, first time buying a laptop online"
+  goal_reveal_strategy: "incremental"
+opening_input: "Hi, I need help finding a laptop"
+expectations:
+  required_tools:
+    - search_inventory
+    - add_to_cart
+    - process_checkout
+  required_tool_args:
+    search_inventory:
+      query: "laptop"
+  terminal_state: null
+  output_must_contain:
+    - "order"
+constraints:
+  max_turns: 8
+  timeout_seconds: 120
+  max_tokens: 8000
+golden: true
+tags:
+  - smoke
+  - purchase

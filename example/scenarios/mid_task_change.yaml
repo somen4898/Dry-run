@@ -1,0 +1,26 @@
+id: mid-task-change-001
+name: "Mid-task change - switch from laptop to tablet"
+description: "User starts looking for a laptop, then changes mind to a tablet mid-conversation"
+persona:
+  goal: "Initially want a laptop, but switch to wanting a tablet after seeing prices"
+  tone: "indecisive"
+  knowledge_level: "novice"
+  background: "Budget-conscious student who is easily swayed by price"
+  goal_reveal_strategy: "incremental"
+opening_input: "Hey, I'm looking for a laptop for school"
+expectations:
+  required_tools:
+    - search_inventory
+  required_tool_args:
+    search_inventory:
+      query: "laptop"
+  terminal_state: null
+  output_must_contain: []
+constraints:
+  max_turns: 10
+  timeout_seconds: 120
+  max_tokens: 8000
+golden: false
+tags:
+  - edge-case
+  - mid-task-change
