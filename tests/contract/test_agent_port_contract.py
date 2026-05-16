@@ -1,7 +1,8 @@
 """Contract tests for AgentPort — any implementation must pass these."""
+
 import pytest
 from dryrun.domain.ports.agent import AgentPort
-from dryrun.domain.models.trace import AgentTurn, ToolCall
+from dryrun.domain.models.trace import AgentTurn
 
 
 class StubAgentAdapter(AgentPort):

@@ -1,4 +1,5 @@
 """Tests for SyntheticUser — uses a mock LLMPort."""
+
 import pytest
 import asyncio
 from dryrun.domain.ports.llm import LLMPort
@@ -51,13 +52,18 @@ class TestSyntheticUser:
         llm = MockLLMPort(["response"])
         user = SyntheticUser(persona=persona, llm=llm)
         prompt = user._build_system_prompt()
-        assert "do not state your full goal" in prompt.lower() or "state only your immediate need" in prompt.lower()
+        assert (
+            "do not state your full goal" in prompt.lower()
+            or "state only your immediate need" in prompt.lower()
+        )
         assert persona.goal in prompt
 
     def test_system_prompt_evasive_strategy(self):
         persona = Persona(
-            goal="Get a refund", tone="frustrated",
-            knowledge_level="expert", background="Repeat customer",
+            goal="Get a refund",
+            tone="frustrated",
+            knowledge_level="expert",
+            background="Repeat customer",
             goal_reveal_strategy="evasive",
         )
         llm = MockLLMPort(["response"])
@@ -74,19 +80,21 @@ class TestSyntheticUser:
     def test_persona_drift_check_fails_on_ai_reveal(self, persona):
         llm = MockLLMPort(["no"])
         user = SyntheticUser(persona=persona, llm=llm)
-        result = asyncio.run(user._check_persona_drift(
-            "As an AI language model, I cannot actually buy things"
-        ))
+        result = asyncio.run(
+            user._check_persona_drift("As an AI language model, I cannot actually buy things")
+        )
         assert result is False
 
     def test_drift_retry_then_accept(self, persona):
         """On drift failure, regenerate once. On second failure, accept with warning."""
-        llm = MockLLMPort([
-            "As an AI, I can't buy things",  # first generation (bad)
-            "no",                              # drift check fails
-            "I'd like a laptop please",        # retry generation (good)
-            "yes",                             # drift check passes
-        ])
+        llm = MockLLMPort(
+            [
+                "As an AI, I can't buy things",  # first generation (bad)
+                "no",  # drift check fails
+                "I'd like a laptop please",  # retry generation (good)
+                "yes",  # drift check passes
+            ]
+        )
         user = SyntheticUser(persona=persona, llm=llm)
         history = [{"role": "assistant", "content": "How can I help?"}]
         result = asyncio.run(user.next_message(history))

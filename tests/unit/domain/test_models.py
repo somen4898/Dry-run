@@ -1,6 +1,7 @@
 """Tests for scenario domain models."""
-import pytest
+
 from dryrun.domain.models.scenario import Persona, Expectation, Constraints, Scenario
+from dryrun.domain.models.trace import ToolCall, AgentTurn, Trace
 
 
 class TestPersona:
@@ -16,8 +17,11 @@ class TestPersona:
     def test_goal_reveal_strategy_values(self):
         for strategy in ("incremental", "upfront", "evasive"):
             p = Persona(
-                goal="x", tone="x", knowledge_level="x",
-                background="x", goal_reveal_strategy=strategy,
+                goal="x",
+                tone="x",
+                knowledge_level="x",
+                background="x",
+                goal_reveal_strategy=strategy,
             )
             assert p.goal_reveal_strategy == strategy
 
@@ -37,8 +41,10 @@ class TestScenario:
             name="Happy path",
             description="User buys a laptop",
             persona=Persona(
-                goal="Buy a laptop", tone="polite",
-                knowledge_level="novice", background="Student",
+                goal="Buy a laptop",
+                tone="polite",
+                knowledge_level="novice",
+                background="Student",
             ),
             opening_input="Hi, I need a laptop",
             expectations=Expectation(
@@ -55,21 +61,23 @@ class TestScenario:
 
     def test_scenario_golden_flag(self):
         s = Scenario(
-            id="g-001", name="Golden", description="x",
+            id="g-001",
+            name="Golden",
+            description="x",
             persona=Persona(goal="x", tone="x", knowledge_level="x", background="x"),
             opening_input="x",
             expectations=Expectation(
-                required_tools=[], required_tool_args={},
-                terminal_state=None, output_must_contain=[],
+                required_tools=[],
+                required_tool_args={},
+                terminal_state=None,
+                output_must_contain=[],
             ),
             constraints=Constraints(),
-            golden=True, tags=["smoke"],
+            golden=True,
+            tags=["smoke"],
         )
         assert s.golden is True
         assert "smoke" in s.tags
-
-
-from dryrun.domain.models.trace import ToolCall, AgentTurn, Trace
 
 
 class TestToolCall:
@@ -116,17 +124,23 @@ class TestTrace:
 
     def test_trace_with_turns(self):
         turn = AgentTurn(
-            turn_number=1, agent_id="support",
-            input_text="Hi", output_text="Hello!",
-            tool_calls=[], state_before={}, state_after={},
-            latency_ms=200, tokens_used=50,
+            turn_number=1,
+            agent_id="support",
+            input_text="Hi",
+            output_text="Hello!",
+            tool_calls=[],
+            state_before={},
+            state_after={},
+            latency_ms=200,
+            tokens_used=50,
             visible_output_text="Hello!",
         )
         t = Trace(
             scenario_id="test-001",
             turns=[turn],
             final_state={"done": True},
-            total_turns=1, total_tokens=50,
+            total_turns=1,
+            total_tokens=50,
             total_latency_ms=200,
             terminal_reason="goal_met",
         )

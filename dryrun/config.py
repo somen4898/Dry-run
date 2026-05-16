@@ -1,4 +1,5 @@
 """DryRunConfig — Pydantic config loaded from dryrun.yaml."""
+
 from __future__ import annotations
 from pathlib import Path
 from pydantic import BaseModel
@@ -18,4 +19,6 @@ class DryRunConfig(BaseModel):
     @classmethod
     def from_yaml(cls, path: Path) -> DryRunConfig:
         data = yaml.safe_load(path.read_text())
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid config file: {path} (expected a YAML mapping)")
         return cls(**data)

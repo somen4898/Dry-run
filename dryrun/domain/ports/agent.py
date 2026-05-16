@@ -1,4 +1,5 @@
 """AgentPort — the contract any agent framework adapter must implement."""
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dryrun.domain.models.trace import AgentTurn

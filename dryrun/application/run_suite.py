@@ -1,4 +1,5 @@
 """RunSuiteUseCase — orchestrates scenario execution."""
+
 from __future__ import annotations
 import time
 import logging
@@ -6,11 +7,9 @@ from dryrun.domain.models.scenario import Scenario
 from dryrun.domain.models.trace import Trace, AgentTurn
 from dryrun.domain.ports.agent import AgentPort
 from dryrun.domain.ports.llm import LLMPort
-from dryrun.application.synthetic_user import SyntheticUser
+from dryrun.application.synthetic_user import SyntheticUser, _TERMINAL_SIGNALS
 
 logger = logging.getLogger(__name__)
-
-_TERMINAL_SIGNALS = frozenset({"GOAL_ACHIEVED", "GOAL_ABANDONED"})
 
 
 class RunSuiteUseCase:
@@ -23,7 +22,7 @@ class RunSuiteUseCase:
         user = SyntheticUser(persona=scenario.persona, llm=self._llm)
 
         turns: list[AgentTurn] = []
-        history: list[dict] = []
+        history: list[dict] = [{"role": "user", "content": scenario.opening_input}]
         current_input = scenario.opening_input
         total_tokens = 0
         total_latency_ms = 0

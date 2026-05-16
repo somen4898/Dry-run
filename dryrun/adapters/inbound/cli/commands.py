@@ -1,4 +1,5 @@
 """CLI commands — composition root. Wires adapters to use cases."""
+
 from __future__ import annotations
 import asyncio
 import importlib
@@ -26,15 +27,19 @@ def cli():
 
 @cli.command()
 @click.argument("scenario_path", type=click.Path(exists=True))
-@click.option("--config", "config_path", type=click.Path(exists=True), default=None,
-              help="Path to dryrun.yaml config file")
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to dryrun.yaml config file",
+)
 def run(scenario_path: str, config_path: str | None):
     """Run a scenario against the agent and print the captured trace."""
     scenario_file = Path(scenario_path)
 
     # Load scenario
-    with open(scenario_file) as f:
-        scenario_data = yaml.safe_load(f)
+    scenario_data = yaml.safe_load(scenario_file.read_text())
     scenario = Scenario(**scenario_data)
 
     # Load config
@@ -85,7 +90,9 @@ def _print_trace(trace):
     console.print(f"[bold green]{'=' * 60}[/bold green]\n")
 
     for turn in trace.turns:
-        console.print(f"[bold cyan]--- Turn {turn.turn_number} (agent: {turn.agent_id}) ---[/bold cyan]")
+        console.print(
+            f"[bold cyan]--- Turn {turn.turn_number} (agent: {turn.agent_id}) ---[/bold cyan]"
+        )
         console.print(f"[dim]Input:[/dim] {turn.input_text}")
         console.print(f"[dim]Output:[/dim] {turn.output_text[:200]}")
         if turn.visible_output_text != turn.output_text:
@@ -100,7 +107,7 @@ def _print_trace(trace):
             console.print(table)
         console.print(f"[dim]Latency: {turn.latency_ms}ms | Tokens: {turn.tokens_used}[/dim]\n")
 
-    console.print(f"\n[bold]Final state:[/bold]")
+    console.print("\n[bold]Final state:[/bold]")
     for k, v in trace.final_state.items():
         if k != "messages":
             console.print(f"  {k}: {v}")

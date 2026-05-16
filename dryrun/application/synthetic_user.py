@@ -1,4 +1,5 @@
 """SyntheticUser — LLM-driven persona role-play with goal-hiding and drift check."""
+
 from __future__ import annotations
 import logging
 from dryrun.domain.models.scenario import Persona
@@ -125,31 +126,37 @@ class SyntheticUser:
 
     async def _check_persona_drift(self, message: str) -> bool:
         check_messages = [
-            {"role": "system", "content": (
-                "# TASK\n"
-                "You are a classifier that detects whether a simulated user message\n"
-                "has broken character. You output ONLY 'yes' or 'no'.\n\n"
-                "# CRITERIA FOR 'no' (character broken)\n"
-                "Flag as 'no' if ANY of these are true:\n"
-                "1. Message contains 'As an AI', 'language model', 'I cannot actually',\n"
-                "   or any other acknowledgment of being artificial\n"
-                "2. Message tone drastically contradicts the persona (e.g., a 'frustrated'\n"
-                "   persona being extremely polite and formal)\n"
-                "3. Message uses technical jargon when persona is 'novice'\n"
-                "4. Message is a meta-commentary about the conversation itself\n\n"
-                "# CRITERIA FOR 'yes' (character maintained)\n"
-                "Output 'yes' if the message sounds like a real human with the described\n"
-                "persona would say it in a chat conversation.\n\n"
-                "# OUTPUT FORMAT\n"
-                "Respond with exactly one word: 'yes' or 'no'. Nothing else."
-            )},
-            {"role": "user", "content": (
-                f"Persona: {self._persona.tone} tone, {self._persona.knowledge_level} knowledge level, "
-                f"{self._persona.background}.\n\n"
-                f"Message to evaluate:\n"
-                f"\"{message}\"\n\n"
-                f"Is this message in character? (yes/no)"
-            )},
+            {
+                "role": "system",
+                "content": (
+                    "# TASK\n"
+                    "You are a classifier that detects whether a simulated user message\n"
+                    "has broken character. You output ONLY 'yes' or 'no'.\n\n"
+                    "# CRITERIA FOR 'no' (character broken)\n"
+                    "Flag as 'no' if ANY of these are true:\n"
+                    "1. Message contains 'As an AI', 'language model', 'I cannot actually',\n"
+                    "   or any other acknowledgment of being artificial\n"
+                    "2. Message tone drastically contradicts the persona (e.g., a 'frustrated'\n"
+                    "   persona being extremely polite and formal)\n"
+                    "3. Message uses technical jargon when persona is 'novice'\n"
+                    "4. Message is a meta-commentary about the conversation itself\n\n"
+                    "# CRITERIA FOR 'yes' (character maintained)\n"
+                    "Output 'yes' if the message sounds like a real human with the described\n"
+                    "persona would say it in a chat conversation.\n\n"
+                    "# OUTPUT FORMAT\n"
+                    "Respond with exactly one word: 'yes' or 'no'. Nothing else."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Persona: {self._persona.tone} tone, {self._persona.knowledge_level} knowledge level, "
+                    f"{self._persona.background}.\n\n"
+                    f"Message to evaluate:\n"
+                    f'"{message}"\n\n'
+                    f"Is this message in character? (yes/no)"
+                ),
+            },
         ]
         result = await self._llm.complete(check_messages, temperature=0.0)
         return result.strip().lower().startswith("yes")

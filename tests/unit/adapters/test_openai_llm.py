@@ -1,5 +1,5 @@
 """Tests for OpenAIClient — implements LLMPort."""
-import pytest
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from dryrun.adapters.outbound.openai.llm import OpenAIClient
@@ -21,9 +21,7 @@ class TestOpenAIClient:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
 
         client = OpenAIClient(model="gpt-4o-mini")
-        result = asyncio.run(client.complete(
-            [{"role": "user", "content": "Hi"}]
-        ))
+        result = asyncio.run(client.complete([{"role": "user", "content": "Hi"}]))
         assert result == "Hello!"
 
     @patch("dryrun.adapters.outbound.openai.llm.AsyncOpenAI")
@@ -35,9 +33,11 @@ class TestOpenAIClient:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
 
         client = OpenAIClient(model="gpt-4o-mini")
-        asyncio.run(client.complete(
-            [{"role": "user", "content": "test"}],
-            temperature=0.0,
-        ))
+        asyncio.run(
+            client.complete(
+                [{"role": "user", "content": "test"}],
+                temperature=0.0,
+            )
+        )
         call_kwargs = mock_client.chat.completions.create.call_args[1]
         assert call_kwargs["temperature"] == 0.0

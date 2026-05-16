@@ -1,4 +1,5 @@
 """Tests that port ABCs cannot be instantiated and enforce the contract."""
+
 import pytest
 from dryrun.domain.ports.agent import AgentPort
 from dryrun.domain.ports.llm import LLMPort

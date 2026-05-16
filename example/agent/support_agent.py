@@ -16,10 +16,11 @@ Tools:
   - check_order_status(order_id: str) -> dict
   - initiate_refund(order_id: str, reason: str) -> dict
 """
+
 from __future__ import annotations
 import operator
-from typing import Annotated, Any, Sequence, TypedDict
-from langchain_core.messages import BaseMessage, HumanMessage
+from typing import Annotated, Sequence, TypedDict
+from langchain_core.messages import BaseMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, StateGraph
@@ -29,12 +30,14 @@ from langgraph.checkpoint.memory import MemorySaver
 
 # --- State ---
 
+
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
     current_agent: str
 
 
 # --- Tools ---
+
 
 @tool
 def search_inventory(query: str) -> list[dict]:
@@ -95,15 +98,20 @@ def triage_agent(state: AgentState) -> dict:
     """Route to sales or support based on user intent."""
     messages = state["messages"]
     llm = _get_llm()
-    response = llm.invoke([
-        {"role": "system", "content": (
-            "You are a triage agent. Based on the user's message, decide:\n"
-            "- If about purchasing, browsing, cart: respond with 'ROUTE:sales'\n"
-            "- If about order status, refunds, issues: respond with 'ROUTE:support'\n"
-            "- Otherwise: respond helpfully and ask for clarification."
-        )},
-        *messages,
-    ])
+    response = llm.invoke(
+        [
+            {
+                "role": "system",
+                "content": (
+                    "You are a triage agent. Based on the user's message, decide:\n"
+                    "- If about purchasing, browsing, cart: respond with 'ROUTE:sales'\n"
+                    "- If about order status, refunds, issues: respond with 'ROUTE:support'\n"
+                    "- Otherwise: respond helpfully and ask for clarification."
+                ),
+            },
+            *messages,
+        ]
+    )
     return {"messages": [response], "current_agent": "triage"}
 
 
@@ -111,13 +119,18 @@ def sales_agent(state: AgentState) -> dict:
     """Handle sales-related queries."""
     messages = state["messages"]
     llm = _get_llm()
-    response = llm.bind_tools(sales_tools).invoke([
-        {"role": "system", "content": (
-            "You are a sales agent. Help the customer find products, "
-            "manage their cart, and complete purchases. Be helpful and concise."
-        )},
-        *messages,
-    ])
+    response = llm.bind_tools(sales_tools).invoke(
+        [
+            {
+                "role": "system",
+                "content": (
+                    "You are a sales agent. Help the customer find products, "
+                    "manage their cart, and complete purchases. Be helpful and concise."
+                ),
+            },
+            *messages,
+        ]
+    )
     return {"messages": [response], "current_agent": "sales"}
 
 
@@ -125,17 +138,23 @@ def support_agent_node(state: AgentState) -> dict:
     """Handle support-related queries."""
     messages = state["messages"]
     llm = _get_llm()
-    response = llm.bind_tools(support_tools).invoke([
-        {"role": "system", "content": (
-            "You are a customer support agent. Help with order status, "
-            "refunds, and issues. Be empathetic and efficient."
-        )},
-        *messages,
-    ])
+    response = llm.bind_tools(support_tools).invoke(
+        [
+            {
+                "role": "system",
+                "content": (
+                    "You are a customer support agent. Help with order status, "
+                    "refunds, and issues. Be empathetic and efficient."
+                ),
+            },
+            *messages,
+        ]
+    )
     return {"messages": [response], "current_agent": "support"}
 
 
 # --- Routing ---
+
 
 def route_from_triage(state: AgentState) -> str:
     last_msg = state["messages"][-1]
@@ -169,21 +188,33 @@ graph.add_node("support_tools", support_tool_node)
 
 graph.set_entry_point("triage")
 
-graph.add_conditional_edges("triage", route_from_triage, {
-    "sales_agent": "sales_agent",
-    "support_agent": "support_agent",
-    END: END,
-})
+graph.add_conditional_edges(
+    "triage",
+    route_from_triage,
+    {
+        "sales_agent": "sales_agent",
+        "support_agent": "support_agent",
+        END: END,
+    },
+)
 
-graph.add_conditional_edges("sales_agent", should_use_tools, {
-    "tools": "sales_tools",
-    END: END,
-})
+graph.add_conditional_edges(
+    "sales_agent",
+    should_use_tools,
+    {
+        "tools": "sales_tools",
+        END: END,
+    },
+)
 
-graph.add_conditional_edges("support_agent", should_use_tools, {
-    "tools": "support_tools",
-    END: END,
-})
+graph.add_conditional_edges(
+    "support_agent",
+    should_use_tools,
+    {
+        "tools": "support_tools",
+        END: END,
+    },
+)
 
 graph.add_edge("sales_tools", "sales_agent")
 graph.add_edge("support_tools", "support_agent")

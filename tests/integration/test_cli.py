@@ -1,5 +1,5 @@
 """Integration tests for the CLI."""
-import pytest
+
 from click.testing import CliRunner
 from dryrun.adapters.inbound.cli.commands import cli
 

@@ -1,4 +1,5 @@
 """Tests for the runner — uses mock AgentPort and mock LLMPort."""
+
 import pytest
 import asyncio
 from dryrun.domain.models.scenario import Scenario, Persona, Expectation, Constraints
@@ -56,13 +57,17 @@ def scenario() -> Scenario:
         name="Test",
         description="Test scenario",
         persona=Persona(
-            goal="Buy a laptop", tone="polite",
-            knowledge_level="novice", background="Student",
+            goal="Buy a laptop",
+            tone="polite",
+            knowledge_level="novice",
+            background="Student",
         ),
         opening_input="Hi, I need a laptop",
         expectations=Expectation(
-            required_tools=[], required_tool_args={},
-            terminal_state=None, output_must_contain=[],
+            required_tools=[],
+            required_tool_args={},
+            terminal_state=None,
+            output_must_contain=[],
         ),
         constraints=Constraints(max_turns=5),
     )
@@ -71,11 +76,13 @@ def scenario() -> Scenario:
 class TestRunSuiteUseCase:
     def test_goal_met_terminates(self, scenario):
         agent = MockAgentPort(["Here's a laptop for you!", "Order confirmed!"])
-        llm = MockLLMPort([
-            "I'd like the ThinkPad",   # user turn 1
-            "yes",                      # drift check
-            "GOAL_ACHIEVED",            # user turn 2 (terminal)
-        ])
+        llm = MockLLMPort(
+            [
+                "I'd like the ThinkPad",  # user turn 1
+                "yes",  # drift check
+                "GOAL_ACHIEVED",  # user turn 2 (terminal)
+            ]
+        )
         runner = RunSuiteUseCase(agent_port=agent, llm_port=llm)
         trace = asyncio.run(runner.run_scenario(scenario))
         assert isinstance(trace, Trace)
@@ -85,10 +92,14 @@ class TestRunSuiteUseCase:
     def test_max_turns_terminates(self, scenario):
         scenario.constraints.max_turns = 2
         agent = MockAgentPort(["response1", "response2"])
-        llm = MockLLMPort([
-            "user msg 1", "yes",  # turn 1 + drift check
-            "user msg 2", "yes",  # turn 2 + drift check
-        ])
+        llm = MockLLMPort(
+            [
+                "user msg 1",
+                "yes",  # turn 1 + drift check
+                "user msg 2",
+                "yes",  # turn 2 + drift check
+            ]
+        )
         runner = RunSuiteUseCase(agent_port=agent, llm_port=llm)
         trace = asyncio.run(runner.run_scenario(scenario))
         assert trace.terminal_reason == "max_turns"

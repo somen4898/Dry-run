@@ -1,4 +1,5 @@
 """Tests for YAML scenario loading."""
+
 import pytest
 from pathlib import Path
 import yaml

@@ -1,4 +1,5 @@
 """LLMPort — the contract for LLM completion providers."""
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 

@@ -1,4 +1,5 @@
 """Contract tests for LangGraphAdapter — must pass all AgentPort contracts."""
+
 import os
 import pytest
 from tests.contract.test_agent_port_contract import TestAgentPortContract
@@ -15,4 +16,5 @@ class TestLangGraphAdapterContract(TestAgentPortContract):
     @pytest.fixture
     def adapter(self):
         from example.agent.support_agent import compiled_graph
+
         return LangGraphAdapter(compiled_graph)

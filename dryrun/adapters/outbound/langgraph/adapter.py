@@ -1,11 +1,15 @@
 """LangGraphAdapter — implements AgentPort for LangGraph compiled graphs."""
+
 from __future__ import annotations
+import logging
 import time
 import uuid
 from typing import Any
 from langchain_core.messages import HumanMessage
 from dryrun.domain.ports.agent import AgentPort
 from dryrun.domain.models.trace import AgentTurn, ToolCall
+
+logger = logging.getLogger(__name__)
 
 
 class LangGraphAdapter(AgentPort):
@@ -23,6 +27,7 @@ class LangGraphAdapter(AgentPort):
         try:
             state_before = dict(self._graph.get_state(config).values)
         except Exception:
+            logger.debug("Could not capture state_before", exc_info=True)
             state_before = {}
 
         turn_number = len(state_before.get("messages", [])) // 2 + 1
@@ -37,6 +42,7 @@ class LangGraphAdapter(AgentPort):
         try:
             state_after = dict(self._graph.get_state(config).values)
         except Exception:
+            logger.debug("Could not capture state_after", exc_info=True)
             state_after = {}
 
         # Extract output
@@ -65,6 +71,7 @@ class LangGraphAdapter(AgentPort):
             state = self._graph.get_state(config)
             return self._serialize_state(dict(state.values))
         except Exception:
+            logger.debug("Could not capture state for session %s", session_id, exc_info=True)
             return {}
 
     def _extract_output(self, messages: list) -> tuple[str, str, list[ToolCall]]:
@@ -76,12 +83,14 @@ class LangGraphAdapter(AgentPort):
         for msg in messages:
             if hasattr(msg, "tool_calls") and msg.tool_calls:
                 for tc in msg.tool_calls:
-                    tool_calls.append(ToolCall(
-                        tool_name=tc.get("name", "unknown"),
-                        arguments=tc.get("args", {}),
-                        output=None,
-                        latency_ms=0,
-                    ))
+                    tool_calls.append(
+                        ToolCall(
+                            tool_name=tc.get("name", "unknown"),
+                            arguments=tc.get("args", {}),
+                            output=None,
+                            latency_ms=0,
+                        )
+                    )
 
         # The last non-tool AI message is the visible output
         for msg in reversed(messages):
@@ -102,10 +111,7 @@ class LangGraphAdapter(AgentPort):
 
     def _estimate_tokens(self, messages: list) -> int:
         """Rough token estimate based on message content length."""
-        total_chars = sum(
-            len(getattr(msg, "content", "") or "")
-            for msg in messages
-        )
+        total_chars = sum(len(getattr(msg, "content", "") or "") for msg in messages)
         return total_chars // 4
 
     def _serialize_state(self, state: dict) -> dict:
@@ -118,8 +124,5 @@ class LangGraphAdapter(AgentPort):
                     for m in v
                 ]
             else:
-                try:
-                    result[k] = v
-                except Exception:
-                    result[k] = str(v)
+                result[k] = v
         return result

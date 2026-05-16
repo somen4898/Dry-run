@@ -1,5 +1,5 @@
 """Tests for dryrun config loading."""
-import pytest
+
 from pathlib import Path
 from dryrun.config import DryRunConfig
 

@@ -1,4 +1,5 @@
 """OpenAIClient — implements LLMPort using the OpenAI API."""
+
 from __future__ import annotations
 from openai import AsyncOpenAI
 from dryrun.domain.ports.llm import LLMPort
