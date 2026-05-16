@@ -1,0 +1,5 @@
+agent_module: "example.agent.support_agent"
+agent_object: "compiled_graph"
+scenarios_dir: "example/scenarios/"
+models:
+  synthetic_user: "gpt-4o-mini"
