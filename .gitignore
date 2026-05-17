@@ -39,3 +39,4 @@ htmlcov/
 
 # Internal docs (PRD/TRD kept local)
 docs-prd:trd/
+generated/
