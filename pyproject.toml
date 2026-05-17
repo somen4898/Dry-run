@@ -20,6 +20,7 @@ dependencies = [
     "langchain-anthropic>=0.1",
     "langchain-core>=0.2",
     "sentence-transformers>=3.0",
+    "dspy>=2.5",
 ]
 
 [project.optional-dependencies]
