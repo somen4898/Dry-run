@@ -1,0 +1,21 @@
+id: "mind-change-001"
+name: "Mind Change Mid-Task"
+description: "Indecisive user who changes their mind after adding item to cart"
+persona:
+  goal: "Initially wants headphones, then decides on a speaker instead"
+  tone: "indecisive"
+  knowledge_level: "novice"
+  background: "Budget-conscious college student who overthinks purchases"
+  goal_reveal_strategy: "incremental"
+opening_input: "I think I want some headphones? Like, wireless ones maybe?"
+expectations:
+  required_tools: ["search_inventory"]
+  required_tool_args: {}
+  terminal_state: null
+  output_must_contain: []
+constraints:
+  max_turns: 12
+  timeout_seconds: 180
+  max_tokens: 10000
+golden: false
+tags: ["sales", "mind-change"]

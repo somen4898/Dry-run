@@ -1,0 +1,23 @@
+id: "expert-001"
+name: "Expert Buyer"
+description: "Technical expert who knows exactly what they want, expects efficiency"
+persona:
+  goal: "Purchase the ThinkPad X1 Carbon Gen 11 with 32GB RAM"
+  tone: "direct"
+  knowledge_level: "expert"
+  background: "IT professional who buys hardware for their team regularly"
+  goal_reveal_strategy: "upfront"
+opening_input: "I need a ThinkPad X1 Carbon Gen 11, 32GB RAM config. Add to cart and checkout."
+expectations:
+  required_tools: ["search_inventory", "add_to_cart", "process_checkout"]
+  required_tool_args:
+    search_inventory:
+      query: "ThinkPad X1 Carbon"
+  terminal_state: null
+  output_must_contain: ["order"]
+constraints:
+  max_turns: 6
+  timeout_seconds: 60
+  max_tokens: 5000
+golden: false
+tags: ["sales", "expert"]

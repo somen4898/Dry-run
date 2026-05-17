@@ -35,6 +35,7 @@ htmlcov/
 
 # Dry Run
 .dryrun/
+.worktrees/
 
 # Internal docs (PRD/TRD kept local)
 docs-prd:trd/

@@ -34,13 +34,16 @@ def cli():
     default=None,
     help="Path to dryrun.yaml config file",
 )
-def run(scenario_path: str, config_path: str | None):
-    """Run a scenario against the agent and print the captured trace."""
-    scenario_file = Path(scenario_path)
-
-    # Load scenario
-    scenario_data = yaml.safe_load(scenario_file.read_text())
-    scenario = Scenario(**scenario_data)
+@click.option(
+    "--concurrency",
+    "max_concurrent",
+    type=int,
+    default=5,
+    help="Max parallel scenario executions (default: 5)",
+)
+def run(scenario_path: str, config_path: str | None, max_concurrent: int):
+    """Run a scenario (file) or suite (directory) against the agent."""
+    target = Path(scenario_path)
 
     # Load config
     if config_path:
@@ -65,7 +68,7 @@ def run(scenario_path: str, config_path: str | None):
     # Wire adapters — provider comes from config, not hardcoded
     agent_port = LangGraphAdapter(graph)
     llm_port = create_llm(config.models, purpose="synthetic_user")
-    runner = RunSuiteUseCase(agent_port=agent_port, llm_port=llm_port)
+    runner = RunSuiteUseCase(agent_port=agent_port, llm_port=llm_port, config=config)
 
     # Set env vars so the sample agent uses the same provider
     import os
@@ -73,16 +76,46 @@ def run(scenario_path: str, config_path: str | None):
     os.environ.setdefault("DRYRUN_LLM_PROVIDER", config.models.provider)
     os.environ.setdefault("DRYRUN_AGENT_MODEL", config.models.agent)
 
-    # Run
-    console.print(f"\n[bold]Running scenario:[/bold] {scenario.name}")
-    console.print(f"[dim]ID: {scenario.id}[/dim]")
-    console.print(f"[dim]Persona: {scenario.persona.tone} {scenario.persona.knowledge_level}[/dim]")
-    console.print(f"[dim]Goal reveal: {scenario.persona.goal_reveal_strategy}[/dim]\n")
+    if target.is_dir():
+        # Suite mode — run all scenarios in directory (parallel)
+        console.print(f"\n[bold]Running suite:[/bold] {target} (concurrency: {max_concurrent})")
+        run_result = asyncio.run(runner.run_suite(target, max_concurrent=max_concurrent))
+        _print_run_result(run_result)
+    else:
+        # Single scenario mode
+        scenario_data = yaml.safe_load(target.read_text())
+        scenario = Scenario(**scenario_data)
 
-    trace = asyncio.run(runner.run_scenario(scenario))
+        console.print(f"\n[bold]Running scenario:[/bold] {scenario.name}")
+        console.print(f"[dim]ID: {scenario.id}[/dim]")
+        console.print(
+            f"[dim]Persona: {scenario.persona.tone} {scenario.persona.knowledge_level}[/dim]"
+        )
+        console.print(f"[dim]Goal reveal: {scenario.persona.goal_reveal_strategy}[/dim]\n")
 
-    # Print trace
-    _print_trace(trace)
+        trace = asyncio.run(runner.run_scenario(scenario))
+        _print_trace(trace)
+
+
+def _print_run_result(result):
+    """Pretty-print a RunResult summary using Rich."""
+    console.print(f"\n[bold green]{'=' * 60}[/bold green]")
+    console.print(f"[bold]Suite Run:[/bold] {result.run_id}")
+    console.print(f"[bold]Timestamp:[/bold] {result.timestamp}")
+    console.print(f"[bold]Total scenarios:[/bold] {result.total_scenarios}")
+    console.print(f"[bold green]Passed:[/bold green] {result.passed}")
+    console.print(f"[bold red]Failed:[/bold red] {result.failed}")
+    console.print(f"[bold]Aggregate score:[/bold] {result.aggregate_score:.2f}")
+    console.print(f"[bold]Token cost:[/bold] {result.token_cost_actual}")
+    console.print(f"[bold green]{'=' * 60}[/bold green]\n")
+
+    if result.per_dimension_scores:
+        table = Table(title="Per-Dimension Averages")
+        table.add_column("Dimension")
+        table.add_column("Score")
+        for dim, score in result.per_dimension_scores.items():
+            table.add_row(dim, f"{score:.3f}")
+        console.print(table)
 
 
 def _print_trace(trace):

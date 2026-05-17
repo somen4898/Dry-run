@@ -93,12 +93,20 @@ class LangGraphAdapter(AgentPort):
                     )
 
         # The last non-tool AI message is the visible output
+        # Skip routing instructions (e.g., "ROUTE:sales") which are internal agent signals
         for msg in reversed(messages):
             content = self._get_text_content(msg)
             if content:
                 if getattr(msg, "type", None) == "ai" and not getattr(msg, "tool_calls", None):
-                    visible_parts.insert(0, content)
-                    break
+                    # Filter out routing instructions from visible output
+                    lines = content.split("\n")
+                    visible_lines = [
+                        line for line in lines if not line.strip().startswith("ROUTE:")
+                    ]
+                    filtered = "\n".join(visible_lines).strip()
+                    if filtered:
+                        visible_parts.insert(0, filtered)
+                        break
 
         # Full output = all AI message contents
         for msg in messages:

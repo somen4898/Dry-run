@@ -11,6 +11,18 @@ class ModelConfig(BaseModel):
     provider: Literal["openai", "anthropic"] = "anthropic"
     synthetic_user: str = "claude-sonnet-4-6"
     agent: str = "claude-sonnet-4-6"
+    judge: str = "claude-sonnet-4-6"
+
+
+class ThresholdsConfig(BaseModel):
+    aggregate: float = 0.70
+    tool_correctness: float = 0.80
+    argument_correctness: float = 0.75
+    step_efficiency: float = 0.70
+    constraint_adherence: float = 0.90
+    goal_achievement: float = 0.70
+    trajectory_efficiency: float = 0.65
+    persona_fit: float = 0.70
 
 
 class DryRunConfig(BaseModel):
@@ -18,6 +30,7 @@ class DryRunConfig(BaseModel):
     agent_object: str
     scenarios_dir: str = "scenarios/"
     models: ModelConfig = ModelConfig()
+    thresholds: ThresholdsConfig = ThresholdsConfig()
 
     @classmethod
     def from_yaml(cls, path: Path) -> DryRunConfig:

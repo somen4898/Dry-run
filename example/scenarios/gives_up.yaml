@@ -1,0 +1,23 @@
+id: "gives-up-001"
+name: "Gives Up"
+description: "Impatient user who abandons the interaction if agent is too slow or unhelpful"
+persona:
+  goal: "Get help with a refund but gives up if the process takes more than 3 turns"
+  tone: "impatient"
+  knowledge_level: "novice"
+  background: "Busy professional with no time to waste on customer service"
+  goal_reveal_strategy: "upfront"
+opening_input: "I need a refund for order #321. Make it quick."
+expectations:
+  required_tools: ["check_order_status"]
+  required_tool_args:
+    check_order_status:
+      order_id: "321"
+  terminal_state: null
+  output_must_contain: []
+constraints:
+  max_turns: 5
+  timeout_seconds: 60
+  max_tokens: 4000
+golden: false
+tags: ["support", "impatient"]

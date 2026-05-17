@@ -1,0 +1,21 @@
+id: "ambiguous-001"
+name: "Ambiguous Request"
+description: "User with a vague request that could be routed to sales or support"
+persona:
+  goal: "Wants to know about a product they already bought — is it a support or sales question?"
+  tone: "vague"
+  knowledge_level: "novice"
+  background: "Confused user who doesn't distinguish between sales and support"
+  goal_reveal_strategy: "incremental"
+opening_input: "Hi, I have a question about the laptop I got from you guys"
+expectations:
+  required_tools: []
+  required_tool_args: {}
+  terminal_state: null
+  output_must_contain: []
+constraints:
+  max_turns: 8
+  timeout_seconds: 120
+  max_tokens: 8000
+golden: false
+tags: ["triage", "ambiguous"]

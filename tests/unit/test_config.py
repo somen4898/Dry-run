@@ -1,7 +1,7 @@
 """Tests for dryrun config loading."""
 
 from pathlib import Path
-from dryrun.config import DryRunConfig
+from dryrun.config import DryRunConfig, ThresholdsConfig
 
 
 CONFIG_YAML = """\
@@ -31,3 +31,30 @@ class TestDryRunConfig:
         assert config.models.provider == "anthropic"
         assert config.models.synthetic_user == "claude-sonnet-4-6"
         assert config.models.agent == "claude-sonnet-4-6"
+
+
+class TestThresholdsConfig:
+    def test_defaults(self):
+        t = ThresholdsConfig()
+        assert t.aggregate == 0.70
+        assert t.tool_correctness == 0.80
+        assert t.argument_correctness == 0.75
+        assert t.step_efficiency == 0.70
+        assert t.constraint_adherence == 0.90
+        assert t.goal_achievement == 0.70
+        assert t.trajectory_efficiency == 0.65
+        assert t.persona_fit == 0.70
+
+    def test_config_includes_thresholds(self):
+        cfg = DryRunConfig(agent_module="x", agent_object="y")
+        assert cfg.thresholds.aggregate == 0.70
+
+    def test_override_from_dict(self):
+        cfg = DryRunConfig(
+            agent_module="x",
+            agent_object="y",
+            thresholds={"aggregate": 0.85, "persona_fit": 0.60},
+        )
+        assert cfg.thresholds.aggregate == 0.85
+        assert cfg.thresholds.persona_fit == 0.60
+        assert cfg.thresholds.tool_correctness == 0.80  # default preserved
