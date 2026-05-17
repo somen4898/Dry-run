@@ -31,7 +31,7 @@ _GOAL_STRATEGY_INSTRUCTIONS = {
     ),
 }
 
-_TERMINAL_SIGNALS = frozenset({"GOAL_ACHIEVED", "GOAL_ABANDONED"})
+TERMINAL_SIGNALS = frozenset({"GOAL_ACHIEVED", "GOAL_ABANDONED"})
 
 
 class SyntheticUser:
@@ -121,7 +121,7 @@ class SyntheticUser:
         ]
         response = await self._llm.complete(messages, temperature=0.7)
 
-        if response.strip() in _TERMINAL_SIGNALS:
+        if response.strip() in TERMINAL_SIGNALS:
             return response.strip()
 
         # Persona-drift check: one check, one retry on failure

@@ -16,7 +16,7 @@ from dryrun.domain.models.trace import Trace, AgentTurn
 from dryrun.domain.models.evaluation import RunResult
 from dryrun.domain.ports.agent import AgentPort
 from dryrun.domain.ports.llm import LLMPort
-from dryrun.application.synthetic_user import SyntheticUser, _TERMINAL_SIGNALS
+from dryrun.application.synthetic_user import SyntheticUser, TERMINAL_SIGNALS
 
 logger = logging.getLogger(__name__)
 
@@ -47,15 +47,28 @@ class RunSuiteUseCase:
 
         async def _run_and_evaluate(scenario: Scenario):
             async with semaphore:
-                logger.info("Starting scenario: %s", scenario.id)
-                trace = await self.run_scenario(scenario)
-                result = await evaluator.evaluate(
-                    trace, scenario, self._llm, self._config.thresholds
-                )
-                logger.info(
-                    "Finished scenario: %s (%s)", scenario.id, "PASS" if result.passed else "FAIL"
-                )
-                return result, trace.total_tokens
+                try:
+                    logger.info("Starting scenario: %s", scenario.id)
+                    trace = await self.run_scenario(scenario)
+                    result = await evaluator.evaluate(
+                        trace, scenario, self._llm, self._config.thresholds
+                    )
+                    logger.info(
+                        "Finished scenario: %s (%s)",
+                        scenario.id,
+                        "PASS" if result.passed else "FAIL",
+                    )
+                    return result, trace.total_tokens
+                except Exception as e:
+                    logger.error("Scenario %s failed: %s", scenario.id, e)
+                    from dryrun.domain.models.evaluation import EvalResult
+
+                    return EvalResult(
+                        scenario_id=scenario.id,
+                        passed=False,
+                        aggregate_score=0.0,
+                        dimensions=[],
+                    ), 0
 
         results = await asyncio.gather(*[_run_and_evaluate(s) for s in scenarios])
         eval_results = [r[0] for r in results]
@@ -108,10 +121,7 @@ class RunSuiteUseCase:
                 )
 
             # Run agent step (sync call — offload to thread for concurrency)
-            loop = asyncio.get_event_loop()
-            agent_turn = await loop.run_in_executor(
-                None, self._agent.step, session_id, current_input
-            )
+            agent_turn = await asyncio.to_thread(self._agent.step, session_id, current_input)
             turns.append(agent_turn)
             total_tokens += agent_turn.tokens_used
             total_latency_ms += agent_turn.latency_ms
@@ -128,7 +138,7 @@ class RunSuiteUseCase:
             # Get synthetic user response
             next_input = await user.next_message(history)
 
-            if next_input in _TERMINAL_SIGNALS:
+            if next_input in TERMINAL_SIGNALS:
                 reason = "goal_met" if next_input == "GOAL_ACHIEVED" else "goal_abandoned"
                 return self._build_trace(
                     scenario, turns, session_id, total_tokens, total_latency_ms, reason
