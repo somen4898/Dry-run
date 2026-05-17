@@ -7,3 +7,13 @@ models:
   provider: "anthropic"
   synthetic_user: "claude-sonnet-4-6"
   agent: "claude-sonnet-4-6"
+
+thresholds:
+  aggregate: 0.70
+  tool_correctness: 0.80
+  argument_correctness: 0.75
+  step_efficiency: 0.70
+  constraint_adherence: 0.90
+  goal_achievement: 0.70
+  trajectory_efficiency: 0.65
+  persona_fit: 0.70

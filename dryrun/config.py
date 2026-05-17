@@ -13,11 +13,23 @@ class ModelConfig(BaseModel):
     agent: str = "claude-sonnet-4-6"
 
 
+class ThresholdsConfig(BaseModel):
+    aggregate: float = 0.70
+    tool_correctness: float = 0.80
+    argument_correctness: float = 0.75
+    step_efficiency: float = 0.70
+    constraint_adherence: float = 0.90
+    goal_achievement: float = 0.70
+    trajectory_efficiency: float = 0.65
+    persona_fit: float = 0.70
+
+
 class DryRunConfig(BaseModel):
     agent_module: str
     agent_object: str
     scenarios_dir: str = "scenarios/"
     models: ModelConfig = ModelConfig()
+    thresholds: ThresholdsConfig = ThresholdsConfig()
 
     @classmethod
     def from_yaml(cls, path: Path) -> DryRunConfig:
