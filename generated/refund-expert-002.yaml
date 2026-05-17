@@ -1,0 +1,33 @@
+constraints:
+  max_tokens: 9000
+  max_turns: 10
+  timeout_seconds: 150
+description: Experienced customer with product knowledge pushes back on standard refund
+  policy and demands expedited resolution for a defective device order
+expectations:
+  output_must_contain:
+  - refund
+  - expedited
+  required_tool_args:
+    check_order_status:
+      order_id: '456'
+    initiate_refund:
+      order_id: '456'
+  required_tools:
+  - check_order_status
+  - initiate_refund
+golden: false
+id: refund-expert-002
+name: Tech-Savvy Refund Negotiation
+opening_input: I received the wireless headphones from order
+persona:
+  background: Senior software engineer, frequent online shopper, highly familiar with
+    consumer rights and return policies
+  goal: Secure full refund for order
+  goal_reveal_strategy: upfront
+  knowledge_level: expert
+  tone: demanding
+tags:
+- support
+- refund
+- escalation

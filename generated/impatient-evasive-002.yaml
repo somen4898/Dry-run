@@ -1,0 +1,26 @@
+constraints:
+  max_tokens: 6000
+  max_turns: 6
+  timeout_seconds: 90
+description: User with limited patience who doesn't immediately reveal their true
+  need, forcing the agent to ask clarifying questions under time pressure
+expectations:
+  output_must_contain: []
+  required_tool_args:
+    search_inventory:
+      query: wireless charger
+  required_tools:
+  - search_inventory
+golden: false
+id: impatient-evasive-002
+name: Impatient User with Hidden Requirements
+opening_input: I need something tech-related. Just help me find it already, I don't
+  have much time.
+persona:
+  background: Busy professional with limited availability for shopping, frustrated
+    by slow customer service
+  goal: Find a wireless charger but only reveal this after multiple agent prompts
+  goal_reveal_strategy: evasive
+  knowledge_level: novice
+  tone: impatient
+tags: []

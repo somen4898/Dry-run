@@ -32,43 +32,48 @@ class RunSuiteUseCase:
     async def run_suite(self, scenarios_dir: Path, max_concurrent: int = 5) -> RunResult:
         """Run all scenarios in a directory concurrently and return aggregated results.
 
+        Uses adaptive rate limiting: retries on 429/5xx with exponential backoff,
+        and automatically reduces concurrency when rate-limited.
+
         Args:
             scenarios_dir: Path to directory containing scenario YAML files
             max_concurrent: Max parallel scenario executions (default 5).
-                           Tune down if hitting API rate limits.
         """
         from dryrun.application.evaluator import Evaluator
+        from dryrun.application.rate_limiter import AdaptiveLimiter
 
         scenario_files = sorted(scenarios_dir.glob("*.yaml"))
         scenarios = [Scenario(**yaml.safe_load(f.read_text())) for f in scenario_files]
 
         evaluator = Evaluator()
-        semaphore = asyncio.Semaphore(max_concurrent)
+        limiter = AdaptiveLimiter(max_concurrent=max_concurrent, max_retries=3)
 
         async def _run_and_evaluate(scenario: Scenario):
-            async with semaphore:
-                try:
-                    logger.info("Starting scenario: %s", scenario.id)
-                    trace = await self.run_scenario(scenario)
-                    result = await evaluator.evaluate(
-                        trace, scenario, self._llm, self._config.thresholds
-                    )
-                    logger.info(
-                        "Finished scenario: %s (%s)",
-                        scenario.id,
-                        "PASS" if result.passed else "FAIL",
-                    )
-                    return result, trace.total_tokens
-                except Exception as e:
-                    logger.error("Scenario %s failed: %s", scenario.id, e)
-                    from dryrun.domain.models.evaluation import EvalResult
+            async def _inner():
+                logger.info("Starting scenario: %s", scenario.id)
+                trace = await self.run_scenario(scenario)
+                result = await evaluator.evaluate(
+                    trace, scenario, self._llm, self._config.thresholds
+                )
+                logger.info(
+                    "Finished scenario: %s (%s)",
+                    scenario.id,
+                    "PASS" if result.passed else "FAIL",
+                )
+                return result, trace.total_tokens
 
-                    return EvalResult(
-                        scenario_id=scenario.id,
-                        passed=False,
-                        aggregate_score=0.0,
-                        dimensions=[],
-                    ), 0
+            try:
+                return await limiter.run(_inner, label=scenario.id)
+            except Exception as e:
+                logger.error("Scenario %s failed after retries: %s", scenario.id, e)
+                from dryrun.domain.models.evaluation import EvalResult
+
+                return EvalResult(
+                    scenario_id=scenario.id,
+                    passed=False,
+                    aggregate_score=0.0,
+                    dimensions=[],
+                ), 0
 
         results = await asyncio.gather(*[_run_and_evaluate(s) for s in scenarios])
         eval_results = [r[0] for r in results]
