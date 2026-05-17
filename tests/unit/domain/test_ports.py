@@ -3,6 +3,7 @@
 import pytest
 from dryrun.domain.ports.agent import AgentPort
 from dryrun.domain.ports.llm import LLMPort
+from dryrun.domain.ports.store import StorePort
 
 
 class TestAgentPortABC:
@@ -24,8 +25,6 @@ class TestLLMPortABC:
     def test_has_complete_method(self):
         assert hasattr(LLMPort, "complete")
 
-
-from dryrun.domain.ports.store import StorePort
 
 
 class TestStorePortABC:

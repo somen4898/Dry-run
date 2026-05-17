@@ -1,6 +1,5 @@
 """Tests for CLI generate command."""
 
-import pytest
 from click.testing import CliRunner
 from dryrun.adapters.inbound.cli.commands import cli
 

@@ -2,7 +2,6 @@
 
 import pytest
 from dryrun.domain.models.evaluation import RunResult, EvalResult, DimensionScore
-from dryrun.domain.models.diff import RunDiff
 from dryrun.domain.services.diff import compute_diff
 
 

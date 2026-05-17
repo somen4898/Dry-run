@@ -174,7 +174,7 @@ def _print_run_result(result):
 def _print_diff(diff):
     """Print a RunDiff summary."""
     color = "red" if diff.score_delta < 0 else "green"
-    console.print(f"\n[bold]Diff vs previous run:[/bold]")
+    console.print("\n[bold]Diff vs previous run:[/bold]")
     console.print(f"  Score delta: [{color}]{diff.score_delta:+.3f}[/]")
     console.print(f"  Stable pass: {diff.stable_pass} | Stable fail: {diff.stable_fail}")
 

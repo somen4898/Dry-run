@@ -1,7 +1,7 @@
 """Tests for DSPy-based scenario generator."""
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from dryrun.application.generator import ScenarioGenerator
 from dryrun.domain.models.scenario import Scenario, Persona, Expectation, Constraints
 from dryrun.adapters.outbound.memory.store import InMemoryStoreAdapter

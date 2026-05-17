@@ -1,6 +1,7 @@
 """Tests for TerminalReporter."""
 
 import pytest
+from dryrun.domain.models.diff import FailureMatch
 from dryrun.domain.models.evaluation import DimensionScore, EvalResult, RunResult
 from dryrun.adapters.outbound.reporters.terminal import TerminalReporter
 
@@ -67,8 +68,6 @@ class TestTerminalReporter:
         reporter = TerminalReporter()
         assert isinstance(reporter, ReporterPort)
 
-
-from dryrun.domain.models.diff import FailureMatch
 
 
 class TestTerminalReporterWithFailures:
