@@ -114,9 +114,13 @@ def run(scenario_path: str, config_path: str | None, max_concurrent: int, diff: 
 
 
 @cli.command()
-@click.option("--seeds", type=click.Path(exists=True), required=True, help="Directory of seed scenarios")
+@click.option(
+    "--seeds", type=click.Path(exists=True), required=True, help="Directory of seed scenarios"
+)
 @click.option("--count", type=int, default=5, help="Number of scenarios to generate")
-@click.option("--output", type=click.Path(), required=True, help="Output directory for generated scenarios")
+@click.option(
+    "--output", type=click.Path(), required=True, help="Output directory for generated scenarios"
+)
 @click.option("--config", "config_path", type=click.Path(exists=True), default=None)
 def generate(seeds: str, count: int, output: str, config_path: str | None):
     """Generate new scenarios from seed examples using DSPy."""
@@ -130,11 +134,12 @@ def generate(seeds: str, count: int, output: str, config_path: str | None):
     # Load seeds
     seeds_dir = Path(seeds)
     seed_scenarios = [
-        Scenario(**_yaml.safe_load(f.read_text()))
-        for f in sorted(seeds_dir.glob("*.yaml"))
+        Scenario(**_yaml.safe_load(f.read_text())) for f in sorted(seeds_dir.glob("*.yaml"))
     ]
 
-    console.print(f"\n[bold]Generating {count} scenarios from {len(seed_scenarios)} seeds...[/bold]")
+    console.print(
+        f"\n[bold]Generating {count} scenarios from {len(seed_scenarios)} seeds...[/bold]"
+    )
 
     generator = ScenarioGenerator(store=store, model=config.models.generator)
     results = asyncio.run(generator.generate(seeds=seed_scenarios, count=count))
@@ -144,7 +149,9 @@ def generate(seeds: str, count: int, output: str, config_path: str | None):
     output_dir.mkdir(parents=True, exist_ok=True)
     for scenario in results:
         out_path = output_dir / f"{scenario.id}.yaml"
-        out_path.write_text(_yaml.dump(scenario.model_dump(exclude_none=True), default_flow_style=False))
+        out_path.write_text(
+            _yaml.dump(scenario.model_dump(exclude_none=True), default_flow_style=False)
+        )
         console.print(f"  [green]checkmark[/green] {out_path}")
 
     console.print(f"\n[bold]Generated {len(results)} scenarios[/bold]")
@@ -181,12 +188,16 @@ def _print_diff(diff):
     if diff.newly_failing:
         console.print(f"\n  [bold red]Newly failing ({len(diff.newly_failing)}):[/bold red]")
         for sd in diff.newly_failing:
-            console.print(f"    x {sd.scenario_id}: {sd.previous_score:.2f} -> {sd.current_score:.2f} ({sd.delta:+.2f})")
+            console.print(
+                f"    x {sd.scenario_id}: {sd.previous_score:.2f} -> {sd.current_score:.2f} ({sd.delta:+.2f})"
+            )
 
     if diff.newly_passing:
         console.print(f"\n  [bold green]Newly passing ({len(diff.newly_passing)}):[/bold green]")
         for sd in diff.newly_passing:
-            console.print(f"    + {sd.scenario_id}: {sd.previous_score:.2f} -> {sd.current_score:.2f} ({sd.delta:+.2f})")
+            console.print(
+                f"    + {sd.scenario_id}: {sd.previous_score:.2f} -> {sd.current_score:.2f} ({sd.delta:+.2f})"
+            )
 
 
 def _print_trace(trace):

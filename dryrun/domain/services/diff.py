@@ -35,21 +35,25 @@ def compute_diff(previous: RunResult, current: RunResult) -> RunDiff:
         }
 
         if prev_er.passed and not curr_er.passed:
-            newly_failing.append(ScenarioDelta(
-                scenario_id=sid,
-                previous_score=prev_er.aggregate_score,
-                current_score=curr_er.aggregate_score,
-                delta=delta,
-                dimension_deltas=dim_deltas,
-            ))
+            newly_failing.append(
+                ScenarioDelta(
+                    scenario_id=sid,
+                    previous_score=prev_er.aggregate_score,
+                    current_score=curr_er.aggregate_score,
+                    delta=delta,
+                    dimension_deltas=dim_deltas,
+                )
+            )
         elif not prev_er.passed and curr_er.passed:
-            newly_passing.append(ScenarioDelta(
-                scenario_id=sid,
-                previous_score=prev_er.aggregate_score,
-                current_score=curr_er.aggregate_score,
-                delta=delta,
-                dimension_deltas=dim_deltas,
-            ))
+            newly_passing.append(
+                ScenarioDelta(
+                    scenario_id=sid,
+                    previous_score=prev_er.aggregate_score,
+                    current_score=curr_er.aggregate_score,
+                    delta=delta,
+                    dimension_deltas=dim_deltas,
+                )
+            )
         elif curr_er.passed:
             stable_pass += 1
         else:

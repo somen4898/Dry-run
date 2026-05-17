@@ -9,11 +9,17 @@ from dryrun.domain.models.evaluation import RunResult, EvalResult, DimensionScor
 
 def _scenario(id: str, name: str = "Test") -> Scenario:
     return Scenario(
-        id=id, name=name, description=f"Scenario {id}",
-        persona=Persona(goal="Buy laptop", tone="polite", knowledge_level="novice", background="Student"),
+        id=id,
+        name=name,
+        description=f"Scenario {id}",
+        persona=Persona(
+            goal="Buy laptop", tone="polite", knowledge_level="novice", background="Student"
+        ),
         opening_input="Hi",
         expectations=Expectation(
-            required_tools=["search"], required_tool_args={}, output_must_contain=[],
+            required_tools=["search"],
+            required_tool_args={},
+            output_must_contain=[],
             terminal_state=None,
         ),
         constraints=Constraints(),
@@ -31,8 +37,14 @@ def _run_result(run_id: str, scenario_ids: list[str], passed: bool = True) -> Ru
         per_dimension_scores={"tool_correctness": 0.9},
         eval_results=[
             EvalResult(
-                scenario_id=sid, passed=passed, aggregate_score=0.85 if passed else 0.4,
-                dimensions=[DimensionScore(dimension="tool_correctness", score=0.9, passed=True, reason="OK")],
+                scenario_id=sid,
+                passed=passed,
+                aggregate_score=0.85 if passed else 0.4,
+                dimensions=[
+                    DimensionScore(
+                        dimension="tool_correctness", score=0.9, passed=True, reason="OK"
+                    )
+                ],
             )
             for sid in scenario_ids
         ],

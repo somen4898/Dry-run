@@ -8,10 +8,19 @@ from dryrun.domain.models.scenario import Scenario, Persona, Expectation, Constr
 @pytest.fixture
 def scenario() -> Scenario:
     return Scenario(
-        id="s1", name="Test", description="Buy a laptop for college",
-        persona=Persona(goal="Buy budget laptop", tone="polite", knowledge_level="novice", background="Student"),
+        id="s1",
+        name="Test",
+        description="Buy a laptop for college",
+        persona=Persona(
+            goal="Buy budget laptop", tone="polite", knowledge_level="novice", background="Student"
+        ),
         opening_input="Hi",
-        expectations=Expectation(required_tools=["search", "add_to_cart"], required_tool_args={}, output_must_contain=[], terminal_state=None),
+        expectations=Expectation(
+            required_tools=["search", "add_to_cart"],
+            required_tool_args={},
+            output_must_contain=[],
+            terminal_state=None,
+        ),
         constraints=Constraints(),
     )
 
@@ -25,17 +34,38 @@ class TestEmbedScenario:
 
     def test_similar_scenarios_have_high_similarity(self):
         s1 = Scenario(
-            id="s1", name="A", description="Buy a laptop",
-            persona=Persona(goal="Buy laptop", tone="polite", knowledge_level="novice", background="Student"),
+            id="s1",
+            name="A",
+            description="Buy a laptop",
+            persona=Persona(
+                goal="Buy laptop", tone="polite", knowledge_level="novice", background="Student"
+            ),
             opening_input="Hi",
-            expectations=Expectation(required_tools=["search"], required_tool_args={}, output_must_contain=[], terminal_state=None),
+            expectations=Expectation(
+                required_tools=["search"],
+                required_tool_args={},
+                output_must_contain=[],
+                terminal_state=None,
+            ),
             constraints=Constraints(),
         )
         s2 = Scenario(
-            id="s2", name="B", description="Purchase a laptop computer",
-            persona=Persona(goal="Purchase laptop", tone="polite", knowledge_level="novice", background="Student"),
+            id="s2",
+            name="B",
+            description="Purchase a laptop computer",
+            persona=Persona(
+                goal="Purchase laptop",
+                tone="polite",
+                knowledge_level="novice",
+                background="Student",
+            ),
             opening_input="Hello",
-            expectations=Expectation(required_tools=["search"], required_tool_args={}, output_must_contain=[], terminal_state=None),
+            expectations=Expectation(
+                required_tools=["search"],
+                required_tool_args={},
+                output_must_contain=[],
+                terminal_state=None,
+            ),
             constraints=Constraints(),
         )
         e1 = embed_scenario(s1)

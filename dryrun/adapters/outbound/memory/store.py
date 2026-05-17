@@ -74,16 +74,20 @@ class InMemoryStoreAdapter(StorePort):
                 if not er.passed and er.scenario_id in self._scenarios:
                     _, emb = self._scenarios[er.scenario_id]
                     sim = _cosine_similarity(embedding, emb)
-                    matches.append((
-                        FailureMatch(
-                            scenario_id=er.scenario_id,
-                            run_id=run.run_id,
-                            run_timestamp=str(run.timestamp),
-                            similarity_score=sim,
-                            failed_dimensions=[d.dimension for d in er.dimensions if not d.passed],
-                            failure_reasons=[d.reason for d in er.dimensions if not d.passed],
-                        ),
-                        sim,
-                    ))
+                    matches.append(
+                        (
+                            FailureMatch(
+                                scenario_id=er.scenario_id,
+                                run_id=run.run_id,
+                                run_timestamp=str(run.timestamp),
+                                similarity_score=sim,
+                                failed_dimensions=[
+                                    d.dimension for d in er.dimensions if not d.passed
+                                ],
+                                failure_reasons=[d.reason for d in er.dimensions if not d.passed],
+                            ),
+                            sim,
+                        )
+                    )
         matches.sort(key=lambda x: x[1], reverse=True)
         return [m for m, _ in matches[:top_k]]

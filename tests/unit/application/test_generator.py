@@ -9,10 +9,19 @@ from dryrun.adapters.outbound.memory.store import InMemoryStoreAdapter
 
 def _seed_scenario() -> Scenario:
     return Scenario(
-        id="seed-001", name="Seed", description="Buy a laptop for college",
-        persona=Persona(goal="Buy budget laptop", tone="polite", knowledge_level="novice", background="Student"),
+        id="seed-001",
+        name="Seed",
+        description="Buy a laptop for college",
+        persona=Persona(
+            goal="Buy budget laptop", tone="polite", knowledge_level="novice", background="Student"
+        ),
         opening_input="Hi, I need a laptop",
-        expectations=Expectation(required_tools=["search_inventory", "add_to_cart"], required_tool_args={}, output_must_contain=["order"], terminal_state=None),
+        expectations=Expectation(
+            required_tools=["search_inventory", "add_to_cart"],
+            required_tool_args={},
+            output_must_contain=["order"],
+            terminal_state=None,
+        ),
         constraints=Constraints(max_turns=8),
     )
 

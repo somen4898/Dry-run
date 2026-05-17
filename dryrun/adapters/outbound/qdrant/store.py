@@ -3,8 +3,12 @@
 from __future__ import annotations
 from qdrant_client import AsyncQdrantClient as QdrantAsyncClient
 from qdrant_client.models import (
-    Distance, VectorParams, PointStruct, Filter,
-    FieldCondition, MatchValue,
+    Distance,
+    VectorParams,
+    PointStruct,
+    Filter,
+    FieldCondition,
+    MatchValue,
 )
 from dryrun.domain.models.diff import FailureMatch
 from dryrun.domain.models.evaluation import RunResult
@@ -48,13 +52,17 @@ class QdrantAdapter(StorePort):
         self, embedding: list[float], top_k: int = 5
     ) -> list[Scenario]:
         results = await self._client.search(
-            collection_name=self._scenarios_col, query_vector=embedding, limit=top_k,
+            collection_name=self._scenarios_col,
+            query_vector=embedding,
+            limit=top_k,
         )
         return [Scenario.model_validate_json(r.payload["scenario_json"]) for r in results]
 
     async def is_near_duplicate(self, embedding: list[float], threshold: float = 0.92) -> bool:
         results = await self._client.search(
-            collection_name=self._scenarios_col, query_vector=embedding, limit=1,
+            collection_name=self._scenarios_col,
+            query_vector=embedding,
+            limit=1,
             score_threshold=threshold,
         )
         return len(results) > 0
@@ -75,7 +83,9 @@ class QdrantAdapter(StorePort):
     async def get_run(self, run_id: str) -> RunResult | None:
         results = await self._client.scroll(
             collection_name=self._runs_col,
-            scroll_filter=Filter(must=[FieldCondition(key="run_id", match=MatchValue(value=run_id))]),
+            scroll_filter=Filter(
+                must=[FieldCondition(key="run_id", match=MatchValue(value=run_id))]
+            ),
             limit=1,
         )
         points = results[0]
@@ -85,7 +95,8 @@ class QdrantAdapter(StorePort):
 
     async def get_latest_run(self) -> RunResult | None:
         results = await self._client.scroll(
-            collection_name=self._runs_col, limit=100,
+            collection_name=self._runs_col,
+            limit=100,
         )
         points = results[0]
         if not points:
@@ -104,7 +115,9 @@ class QdrantAdapter(StorePort):
     async def mark_golden(self, scenario_id: str) -> None:
         results = await self._client.scroll(
             collection_name=self._scenarios_col,
-            scroll_filter=Filter(must=[FieldCondition(key="scenario_id", match=MatchValue(value=scenario_id))]),
+            scroll_filter=Filter(
+                must=[FieldCondition(key="scenario_id", match=MatchValue(value=scenario_id))]
+            ),
             limit=1,
         )
         points = results[0]
@@ -119,7 +132,9 @@ class QdrantAdapter(StorePort):
         self, embedding: list[float], top_k: int = 3
     ) -> list[FailureMatch]:
         similar = await self._client.search(
-            collection_name=self._scenarios_col, query_vector=embedding, limit=top_k * 3,
+            collection_name=self._scenarios_col,
+            query_vector=embedding,
+            limit=top_k * 3,
         )
         matches: list[FailureMatch] = []
         all_runs = await self._client.scroll(collection_name=self._runs_col, limit=100)
@@ -130,14 +145,18 @@ class QdrantAdapter(StorePort):
             for run in runs:
                 for er in run.eval_results:
                     if er.scenario_id == sid and not er.passed:
-                        matches.append(FailureMatch(
-                            scenario_id=sid,
-                            run_id=run.run_id,
-                            run_timestamp=str(run.timestamp),
-                            similarity_score=scored_point.score,
-                            failed_dimensions=[d.dimension for d in er.dimensions if not d.passed],
-                            failure_reasons=[d.reason for d in er.dimensions if not d.passed],
-                        ))
+                        matches.append(
+                            FailureMatch(
+                                scenario_id=sid,
+                                run_id=run.run_id,
+                                run_timestamp=str(run.timestamp),
+                                similarity_score=scored_point.score,
+                                failed_dimensions=[
+                                    d.dimension for d in er.dimensions if not d.passed
+                                ],
+                                failure_reasons=[d.reason for d in er.dimensions if not d.passed],
+                            )
+                        )
             if len(matches) >= top_k:
                 break
 

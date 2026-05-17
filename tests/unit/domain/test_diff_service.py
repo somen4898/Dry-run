@@ -7,18 +7,27 @@ from dryrun.domain.services.diff import compute_diff
 
 def _eval(sid: str, score: float, passed: bool) -> EvalResult:
     return EvalResult(
-        scenario_id=sid, passed=passed, aggregate_score=score,
-        dimensions=[DimensionScore(dimension="tool_correctness", score=score, passed=passed, reason="test")],
+        scenario_id=sid,
+        passed=passed,
+        aggregate_score=score,
+        dimensions=[
+            DimensionScore(dimension="tool_correctness", score=score, passed=passed, reason="test")
+        ],
     )
 
 
 def _run(run_id: str, evals: list[EvalResult]) -> RunResult:
     passed = sum(1 for e in evals if e.passed)
     return RunResult(
-        run_id=run_id, timestamp="2026-05-17", total_scenarios=len(evals),
-        passed=passed, failed=len(evals) - passed,
+        run_id=run_id,
+        timestamp="2026-05-17",
+        total_scenarios=len(evals),
+        passed=passed,
+        failed=len(evals) - passed,
         aggregate_score=sum(e.aggregate_score for e in evals) / len(evals),
-        per_dimension_scores={}, eval_results=evals, token_cost_actual=0,
+        per_dimension_scores={},
+        eval_results=evals,
+        token_cost_actual=0,
     )
 
 

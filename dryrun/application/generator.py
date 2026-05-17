@@ -24,7 +24,9 @@ class GenerateScenario(dspy.Signature):
     Output ONLY valid YAML for a scenario with fields: id, name, description, persona (goal, tone, knowledge_level, background), opening_input, expectations (required_tools, required_tool_args, output_must_contain), constraints (max_turns)."""
 
     seed_scenarios: str = dspy.InputField(desc="2-3 example scenarios as YAML for reference")
-    variation_strategy: str = dspy.InputField(desc="How to make the new scenario different from seeds")
+    variation_strategy: str = dspy.InputField(
+        desc="How to make the new scenario different from seeds"
+    )
     new_scenario: str = dspy.OutputField(desc="Complete scenario as valid YAML")
 
 
@@ -77,8 +79,7 @@ class ScenarioGenerator:
     def _format_seeds(self, seeds: list[Scenario]) -> str:
         """Format seed scenarios as YAML string."""
         return "\n---\n".join(
-            yaml.dump(s.model_dump(exclude_none=True), default_flow_style=False)
-            for s in seeds
+            yaml.dump(s.model_dump(exclude_none=True), default_flow_style=False) for s in seeds
         )
 
     def _parse_and_validate(self, raw_yaml: str, index: int) -> Scenario | None:

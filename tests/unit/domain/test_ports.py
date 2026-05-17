@@ -26,10 +26,10 @@ class TestLLMPortABC:
         assert hasattr(LLMPort, "complete")
 
 
-
 class TestStorePortABC:
     def test_cannot_instantiate(self):
         import pytest
+
         with pytest.raises(TypeError):
             StorePort()
 
