@@ -1,0 +1,23 @@
+id: "order-status-001"
+name: "Order Status Check"
+description: "Polite novice user checking on a recent order"
+persona:
+  goal: "Find out when order #456 will arrive"
+  tone: "polite"
+  knowledge_level: "novice"
+  background: "First-time online shopper, elderly, not tech-savvy"
+  goal_reveal_strategy: "upfront"
+opening_input: "Hello, I placed an order a few days ago and I'm wondering when it might arrive?"
+expectations:
+  required_tools: ["check_order_status"]
+  required_tool_args:
+    check_order_status:
+      order_id: "456"
+  terminal_state: null
+  output_must_contain: []
+constraints:
+  max_turns: 6
+  timeout_seconds: 90
+  max_tokens: 6000
+golden: false
+tags: ["support", "status"]

@@ -1,0 +1,21 @@
+id: "evasive-001"
+name: "Evasive Goal Reveal"
+description: "User who doesn't reveal their real goal upfront — wants a gift but is embarrassed"
+persona:
+  goal: "Buy a romantic gift (jewelry) for their partner's anniversary"
+  tone: "casual"
+  knowledge_level: "novice"
+  background: "Young professional, first anniversary, doesn't know what to buy"
+  goal_reveal_strategy: "evasive"
+opening_input: "Hey, I'm just browsing. What kind of stuff do you have?"
+expectations:
+  required_tools: ["search_inventory"]
+  required_tool_args: {}
+  terminal_state: null
+  output_must_contain: []
+constraints:
+  max_turns: 12
+  timeout_seconds: 180
+  max_tokens: 10000
+golden: false
+tags: ["sales", "evasive"]

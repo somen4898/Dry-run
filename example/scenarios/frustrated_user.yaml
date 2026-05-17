@@ -1,0 +1,23 @@
+id: "frustrated-001"
+name: "Frustrated Buyer"
+description: "Angry user who had a bad previous experience, now trying to buy again"
+persona:
+  goal: "Buy a gaming keyboard but only if price is under $100"
+  tone: "angry"
+  knowledge_level: "novice"
+  background: "Previous order was cancelled without explanation, very distrustful"
+  goal_reveal_strategy: "incremental"
+opening_input: "Look, last time I ordered something you guys just cancelled it. I want a gaming keyboard but I'm not paying more than $100."
+expectations:
+  required_tools: ["search_inventory"]
+  required_tool_args:
+    search_inventory:
+      query: "gaming keyboard"
+  terminal_state: null
+  output_must_contain: []
+constraints:
+  max_turns: 10
+  timeout_seconds: 120
+  max_tokens: 8000
+golden: false
+tags: ["sales", "frustrated"]

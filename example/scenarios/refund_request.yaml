@@ -1,0 +1,25 @@
+id: "refund-001"
+name: "Refund Request"
+description: "Frustrated customer wants refund for a delivered but defective item"
+persona:
+  goal: "Get a full refund for order #789 because the laptop screen is cracked"
+  tone: "frustrated"
+  knowledge_level: "intermediate"
+  background: "Repeat customer who has purchased 5+ items, first time having an issue"
+  goal_reveal_strategy: "upfront"
+opening_input: "I received my laptop yesterday and the screen is cracked. I need a refund immediately."
+expectations:
+  required_tools: ["check_order_status", "initiate_refund"]
+  required_tool_args:
+    check_order_status:
+      order_id: "789"
+    initiate_refund:
+      order_id: "789"
+  terminal_state: null
+  output_must_contain: ["refund"]
+constraints:
+  max_turns: 8
+  timeout_seconds: 120
+  max_tokens: 8000
+golden: false
+tags: ["support", "refund"]
