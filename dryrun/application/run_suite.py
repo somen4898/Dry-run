@@ -1,6 +1,7 @@
 """RunSuiteUseCase — orchestrates scenario execution."""
 
 from __future__ import annotations
+import asyncio
 import time
 import logging
 from pathlib import Path
@@ -26,22 +27,33 @@ class RunSuiteUseCase:
         self._llm = llm_port
         self._config = config or DryRunConfig(agent_module="", agent_object="")
 
-    async def run_suite(self, scenarios_dir: Path) -> RunResult:
-        """Run all scenarios in a directory and return aggregated results."""
+    async def run_suite(self, scenarios_dir: Path, max_concurrent: int = 5) -> RunResult:
+        """Run all scenarios in a directory concurrently and return aggregated results.
+
+        Args:
+            scenarios_dir: Path to directory containing scenario YAML files
+            max_concurrent: Max parallel scenario executions (default 5).
+                           Tune down if hitting API rate limits.
+        """
         from dryrun.application.evaluator import Evaluator
 
         scenario_files = sorted(scenarios_dir.glob("*.yaml"))
         scenarios = [Scenario(**yaml.safe_load(f.read_text())) for f in scenario_files]
 
         evaluator = Evaluator()
-        eval_results = []
-        total_tokens = 0
+        semaphore = asyncio.Semaphore(max_concurrent)
 
-        for scenario in scenarios:
-            trace = await self.run_scenario(scenario)
-            result = await evaluator.evaluate(trace, scenario, self._llm, self._config.thresholds)
-            eval_results.append(result)
-            total_tokens += trace.total_tokens
+        async def _run_and_evaluate(scenario: Scenario):
+            async with semaphore:
+                logger.info("Starting scenario: %s", scenario.id)
+                trace = await self.run_scenario(scenario)
+                result = await evaluator.evaluate(trace, scenario, self._llm, self._config.thresholds)
+                logger.info("Finished scenario: %s (%s)", scenario.id, "PASS" if result.passed else "FAIL")
+                return result, trace.total_tokens
+
+        results = await asyncio.gather(*[_run_and_evaluate(s) for s in scenarios])
+        eval_results = [r[0] for r in results]
+        total_tokens = sum(r[1] for r in results)
 
         # Compute per-dimension averages
         dim_totals: dict[str, list[float]] = {}
@@ -85,8 +97,11 @@ class RunSuiteUseCase:
                     scenario, turns, session_id, total_tokens, total_latency_ms, "timeout"
                 )
 
-            # Run agent step
-            agent_turn = self._agent.step(session_id, current_input)
+            # Run agent step (sync call — offload to thread for concurrency)
+            loop = asyncio.get_event_loop()
+            agent_turn = await loop.run_in_executor(
+                None, self._agent.step, session_id, current_input
+            )
             turns.append(agent_turn)
             total_tokens += agent_turn.tokens_used
             total_latency_ms += agent_turn.latency_ms

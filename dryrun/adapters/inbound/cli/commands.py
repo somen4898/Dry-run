@@ -34,7 +34,14 @@ def cli():
     default=None,
     help="Path to dryrun.yaml config file",
 )
-def run(scenario_path: str, config_path: str | None):
+@click.option(
+    "--concurrency",
+    "max_concurrent",
+    type=int,
+    default=5,
+    help="Max parallel scenario executions (default: 5)",
+)
+def run(scenario_path: str, config_path: str | None, max_concurrent: int):
     """Run a scenario (file) or suite (directory) against the agent."""
     target = Path(scenario_path)
 
@@ -70,9 +77,9 @@ def run(scenario_path: str, config_path: str | None):
     os.environ.setdefault("DRYRUN_AGENT_MODEL", config.models.agent)
 
     if target.is_dir():
-        # Suite mode — run all scenarios in directory
-        console.print(f"\n[bold]Running suite:[/bold] {target}")
-        run_result = asyncio.run(runner.run_suite(target))
+        # Suite mode — run all scenarios in directory (parallel)
+        console.print(f"\n[bold]Running suite:[/bold] {target} (concurrency: {max_concurrent})")
+        run_result = asyncio.run(runner.run_suite(target, max_concurrent=max_concurrent))
         _print_run_result(run_result)
     else:
         # Single scenario mode
