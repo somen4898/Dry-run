@@ -5,8 +5,10 @@ scenarios_dir: "example/scenarios/"
 models:
   # Change 'provider' to switch everything at once: "anthropic" or "openai"
   provider: "anthropic"
-  synthetic_user: "claude-sonnet-4-6"
-  agent: "claude-sonnet-4-6"
+  synthetic_user: "claude-haiku-4-5"
+  agent: "claude-haiku-4-5"
+  judge: "claude-haiku-4-5"
+  generator: "claude-haiku-4-5"
 
 thresholds:
   aggregate: 0.70
@@ -17,3 +19,12 @@ thresholds:
   goal_achievement: 0.70
   trajectory_efficiency: 0.65
   persona_fit: 0.70
+
+store:
+  provider: "qdrant"
+  url: "http://localhost:6333"
+  collection_prefix: "dryrun_"
+
+gate:
+  regression_threshold: 0.05
+  golden_must_pass: true

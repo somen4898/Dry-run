@@ -1,7 +1,7 @@
 """Tests for dryrun config loading."""
 
 from pathlib import Path
-from dryrun.config import DryRunConfig, ThresholdsConfig
+from dryrun.config import DryRunConfig, ThresholdsConfig, StoreConfig, GateConfig
 
 
 CONFIG_YAML = """\
@@ -29,8 +29,8 @@ class TestDryRunConfig:
         )
         assert config.scenarios_dir == "scenarios/"
         assert config.models.provider == "anthropic"
-        assert config.models.synthetic_user == "claude-sonnet-4-6"
-        assert config.models.agent == "claude-sonnet-4-6"
+        assert config.models.synthetic_user == "claude-haiku-4-5"
+        assert config.models.agent == "claude-haiku-4-5"
 
 
 class TestThresholdsConfig:
@@ -58,3 +58,26 @@ class TestThresholdsConfig:
         assert cfg.thresholds.aggregate == 0.85
         assert cfg.thresholds.persona_fit == 0.60
         assert cfg.thresholds.tool_correctness == 0.80  # default preserved
+
+
+class TestStoreConfig:
+    def test_defaults(self):
+        s = StoreConfig()
+        assert s.provider == "qdrant"
+        assert s.url == "http://localhost:6333"
+        assert s.collection_prefix == "dryrun_"
+
+    def test_config_includes_store(self):
+        cfg = DryRunConfig(agent_module="x", agent_object="y")
+        assert cfg.store.provider == "qdrant"
+
+
+class TestGateConfig:
+    def test_defaults(self):
+        g = GateConfig()
+        assert g.regression_threshold == 0.05
+        assert g.golden_must_pass is True
+
+    def test_config_includes_gate(self):
+        cfg = DryRunConfig(agent_module="x", agent_object="y")
+        assert cfg.gate.regression_threshold == 0.05

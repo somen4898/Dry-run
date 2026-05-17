@@ -19,6 +19,17 @@ from dryrun.adapters.outbound.llm_factory import create_llm
 console = Console()
 
 
+def _load_config(config_path: str | None) -> DryRunConfig:
+    """Load config from path or auto-discover."""
+    if config_path:
+        return DryRunConfig.from_yaml(Path(config_path))
+    for candidate in [Path("dryrun.yaml"), Path("example/dryrun.yaml")]:
+        if candidate.exists():
+            return DryRunConfig.from_yaml(candidate)
+    console.print("[red]No dryrun.yaml config found. Use --config.[/red]")
+    sys.exit(1)
+
+
 @click.group()
 def cli():
     """Dry Run — simulation-based testing harness for LangGraph agents."""
@@ -41,21 +52,13 @@ def cli():
     default=5,
     help="Max parallel scenario executions (default: 5)",
 )
-def run(scenario_path: str, config_path: str | None, max_concurrent: int):
+@click.option("--diff/--no-diff", default=False, help="Show diff against previous run")
+def run(scenario_path: str, config_path: str | None, max_concurrent: int, diff: bool):
     """Run a scenario (file) or suite (directory) against the agent."""
     target = Path(scenario_path)
 
     # Load config
-    if config_path:
-        config = DryRunConfig.from_yaml(Path(config_path))
-    else:
-        for candidate in [Path("dryrun.yaml"), Path("example/dryrun.yaml")]:
-            if candidate.exists():
-                config = DryRunConfig.from_yaml(candidate)
-                break
-        else:
-            console.print("[red]No dryrun.yaml config found. Use --config.[/red]")
-            sys.exit(1)
+    config = _load_config(config_path)
 
     # Load the agent
     try:
@@ -80,6 +83,19 @@ def run(scenario_path: str, config_path: str | None, max_concurrent: int):
         # Suite mode — run all scenarios in directory (parallel)
         console.print(f"\n[bold]Running suite:[/bold] {target} (concurrency: {max_concurrent})")
         run_result = asyncio.run(runner.run_suite(target, max_concurrent=max_concurrent))
+
+        # Store run and compute diff if requested
+        if diff:
+            from dryrun.adapters.outbound.store_factory import create_store
+            from dryrun.domain.services.diff import compute_diff
+
+            store = create_store(config.store)
+            previous = asyncio.run(store.get_latest_run())
+            asyncio.run(store.save_run(run_result))
+            if previous:
+                run_diff = compute_diff(previous, run_result)
+                _print_diff(run_diff)
+
         _print_run_result(run_result)
     else:
         # Single scenario mode
@@ -95,6 +111,50 @@ def run(scenario_path: str, config_path: str | None, max_concurrent: int):
 
         trace = asyncio.run(runner.run_scenario(scenario))
         _print_trace(trace)
+
+
+@cli.command()
+@click.option(
+    "--seeds", type=click.Path(exists=True), required=True, help="Directory of seed scenarios"
+)
+@click.option("--count", type=int, default=5, help="Number of scenarios to generate")
+@click.option(
+    "--output", type=click.Path(), required=True, help="Output directory for generated scenarios"
+)
+@click.option("--config", "config_path", type=click.Path(exists=True), default=None)
+def generate(seeds: str, count: int, output: str, config_path: str | None):
+    """Generate new scenarios from seed examples using DSPy."""
+    import yaml as _yaml
+    from dryrun.application.generator import ScenarioGenerator
+    from dryrun.adapters.outbound.store_factory import create_store
+
+    config = _load_config(config_path)
+    store = create_store(config.store)
+
+    # Load seeds
+    seeds_dir = Path(seeds)
+    seed_scenarios = [
+        Scenario(**_yaml.safe_load(f.read_text())) for f in sorted(seeds_dir.glob("*.yaml"))
+    ]
+
+    console.print(
+        f"\n[bold]Generating {count} scenarios from {len(seed_scenarios)} seeds...[/bold]"
+    )
+
+    generator = ScenarioGenerator(store=store, model=config.models.generator)
+    results = asyncio.run(generator.generate(seeds=seed_scenarios, count=count))
+
+    # Write to output directory
+    output_dir = Path(output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for scenario in results:
+        out_path = output_dir / f"{scenario.id}.yaml"
+        out_path.write_text(
+            _yaml.dump(scenario.model_dump(exclude_none=True), default_flow_style=False)
+        )
+        console.print(f"  [green]checkmark[/green] {out_path}")
+
+    console.print(f"\n[bold]Generated {len(results)} scenarios[/bold]")
 
 
 def _print_run_result(result):
@@ -116,6 +176,28 @@ def _print_run_result(result):
         for dim, score in result.per_dimension_scores.items():
             table.add_row(dim, f"{score:.3f}")
         console.print(table)
+
+
+def _print_diff(diff):
+    """Print a RunDiff summary."""
+    color = "red" if diff.score_delta < 0 else "green"
+    console.print("\n[bold]Diff vs previous run:[/bold]")
+    console.print(f"  Score delta: [{color}]{diff.score_delta:+.3f}[/]")
+    console.print(f"  Stable pass: {diff.stable_pass} | Stable fail: {diff.stable_fail}")
+
+    if diff.newly_failing:
+        console.print(f"\n  [bold red]Newly failing ({len(diff.newly_failing)}):[/bold red]")
+        for sd in diff.newly_failing:
+            console.print(
+                f"    x {sd.scenario_id}: {sd.previous_score:.2f} -> {sd.current_score:.2f} ({sd.delta:+.2f})"
+            )
+
+    if diff.newly_passing:
+        console.print(f"\n  [bold green]Newly passing ({len(diff.newly_passing)}):[/bold green]")
+        for sd in diff.newly_passing:
+            console.print(
+                f"    + {sd.scenario_id}: {sd.previous_score:.2f} -> {sd.current_score:.2f} ({sd.delta:+.2f})"
+            )
 
 
 def _print_trace(trace):

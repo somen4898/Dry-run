@@ -14,10 +14,13 @@ dependencies = [
     "pyyaml>=6.0",
     "openai>=1.0",
     "anthropic>=0.30.0",
+    "qdrant-client>=1.9",
     "langgraph>=0.2",
     "langchain-openai>=0.1",
     "langchain-anthropic>=0.1",
     "langchain-core>=0.2",
+    "sentence-transformers>=3.0",
+    "dspy>=2.5",
 ]
 
 [project.optional-dependencies]
