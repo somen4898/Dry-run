@@ -66,3 +66,22 @@ class TestTerminalReporter:
 
         reporter = TerminalReporter()
         assert isinstance(reporter, ReporterPort)
+
+
+from dryrun.domain.models.diff import FailureMatch
+
+
+class TestTerminalReporterWithFailures:
+    def test_report_scenario_with_similar_failures(self, eval_result):
+        """report_scenario should not crash with similar_failures attached."""
+        reporter = TerminalReporter()
+        failures = [
+            FailureMatch(
+                scenario_id="old-001", run_id="run-old",
+                run_timestamp="2026-05-15", similarity_score=0.89,
+                failed_dimensions=["tool_correctness"],
+                failure_reasons=["Missing: [refund_tool]"],
+            ),
+        ]
+        # Should not raise
+        reporter.report_scenario(eval_result, similar_failures=failures)

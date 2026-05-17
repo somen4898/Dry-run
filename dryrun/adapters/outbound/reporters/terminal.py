@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from dryrun.domain.models.evaluation import EvalResult, RunResult
+from dryrun.domain.models.diff import FailureMatch
 from dryrun.domain.ports.reporter import ReporterPort
 
 
@@ -12,7 +13,9 @@ class TerminalReporter(ReporterPort):
     def __init__(self, console: Console | None = None):
         self._console = console or Console()
 
-    def report_scenario(self, result: EvalResult) -> None:
+    def report_scenario(
+        self, result: EvalResult, similar_failures: list[FailureMatch] | None = None
+    ) -> None:
         """Print a single scenario result as a compact table."""
         status = "[bold green]PASS[/]" if result.passed else "[bold red]FAIL[/]"
         self._console.print(
@@ -36,6 +39,15 @@ class TerminalReporter(ReporterPort):
             )
 
         self._console.print(table)
+
+        # Append similar failures section if provided
+        if similar_failures and not result.passed:
+            self._console.print("\n  [dim]Similar past failures:[/dim]")
+            for fm in similar_failures:
+                self._console.print(
+                    f"    [dim]→ {fm.scenario_id} (run {fm.run_timestamp}): "
+                    f"{', '.join(fm.failed_dimensions)}[/dim]"
+                )
 
     def report_suite(self, result: RunResult) -> None:
         """Print the full suite summary."""

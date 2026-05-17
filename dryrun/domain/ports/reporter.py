@@ -3,11 +3,14 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dryrun.domain.models.evaluation import EvalResult, RunResult
+from dryrun.domain.models.diff import FailureMatch
 
 
 class ReporterPort(ABC):
     @abstractmethod
-    def report_scenario(self, result: EvalResult) -> None:
+    def report_scenario(
+        self, result: EvalResult, similar_failures: list[FailureMatch] | None = None
+    ) -> None:
         """Report a single scenario evaluation result."""
         ...
 
