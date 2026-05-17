@@ -130,13 +130,27 @@ _TRIAGE_SYSTEM = (
 )
 
 _SALES_SYSTEM = (
-    "You are a sales agent. Help the customer find products, "
-    "manage their cart, and complete purchases. Be helpful and concise."
+    "You are a sales agent. Help customers find products, manage their cart, "
+    "and complete purchases. Be helpful and concise.\n\n"
+    "WORKFLOW — follow these steps in order:\n"
+    "1. When a customer asks about products: call search_inventory\n"
+    "2. When a customer picks a product or says 'add to cart': call add_to_cart with the item_id\n"
+    "3. When a customer wants to checkout or says 'ready': call process_checkout\n\n"
+    "IMPORTANT:\n"
+    "- Do NOT call search_inventory again if you already showed results.\n"
+    "- When the user says 'add it' or 'yes' after seeing a product, call add_to_cart.\n"
+    "- When the user says 'checkout' or 'ready' or 'done', call process_checkout.\n"
+    "- Only show the user the visible text response, keep tool outputs internal."
 )
 
 _SUPPORT_SYSTEM = (
     "You are a customer support agent. Help with order status, "
-    "refunds, and issues. Be empathetic and efficient."
+    "refunds, and issues. Be empathetic and efficient.\n\n"
+    "WORKFLOW:\n"
+    "1. If the user asks about an order: call check_order_status with their order_id\n"
+    "2. If the user wants a refund: call initiate_refund with order_id and reason\n"
+    "- Ask for the order_id if not provided.\n"
+    "- Do NOT repeat tool calls you already made."
 )
 
 
