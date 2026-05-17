@@ -11,6 +11,7 @@ class ModelConfig(BaseModel):
     provider: Literal["openai", "anthropic"] = "anthropic"
     synthetic_user: str = "claude-sonnet-4-6"
     agent: str = "claude-sonnet-4-6"
+    judge: str = "claude-sonnet-4-6"
 
 
 class ThresholdsConfig(BaseModel):

@@ -3,8 +3,16 @@
 from __future__ import annotations
 import time
 import logging
+from pathlib import Path
+from uuid import uuid4
+from datetime import datetime, timezone
+
+import yaml
+
+from dryrun.config import DryRunConfig
 from dryrun.domain.models.scenario import Scenario
 from dryrun.domain.models.trace import Trace, AgentTurn
+from dryrun.domain.models.evaluation import RunResult
 from dryrun.domain.ports.agent import AgentPort
 from dryrun.domain.ports.llm import LLMPort
 from dryrun.application.synthetic_user import SyntheticUser, _TERMINAL_SIGNALS
@@ -13,9 +21,50 @@ logger = logging.getLogger(__name__)
 
 
 class RunSuiteUseCase:
-    def __init__(self, agent_port: AgentPort, llm_port: LLMPort):
+    def __init__(self, agent_port: AgentPort, llm_port: LLMPort, config: DryRunConfig | None = None):
         self._agent = agent_port
         self._llm = llm_port
+        self._config = config or DryRunConfig(agent_module="", agent_object="")
+
+    async def run_suite(self, scenarios_dir: Path) -> RunResult:
+        """Run all scenarios in a directory and return aggregated results."""
+        from dryrun.application.evaluator import Evaluator
+
+        scenario_files = sorted(scenarios_dir.glob("*.yaml"))
+        scenarios = [Scenario(**yaml.safe_load(f.read_text())) for f in scenario_files]
+
+        evaluator = Evaluator()
+        eval_results = []
+        total_tokens = 0
+
+        for scenario in scenarios:
+            trace = await self.run_scenario(scenario)
+            result = await evaluator.evaluate(trace, scenario, self._llm, self._config.thresholds)
+            eval_results.append(result)
+            total_tokens += trace.total_tokens
+
+        # Compute per-dimension averages
+        dim_totals: dict[str, list[float]] = {}
+        for er in eval_results:
+            for d in er.dimensions:
+                dim_totals.setdefault(d.dimension, []).append(d.score)
+        per_dimension_scores = {k: sum(v) / len(v) for k, v in dim_totals.items()}
+
+        passed_count = sum(1 for r in eval_results if r.passed)
+        failed_count = len(eval_results) - passed_count
+        aggregate = sum(r.aggregate_score for r in eval_results) / len(eval_results) if eval_results else 0.0
+
+        return RunResult(
+            run_id=str(uuid4()),
+            timestamp=datetime.now(timezone.utc),
+            total_scenarios=len(eval_results),
+            passed=passed_count,
+            failed=failed_count,
+            aggregate_score=aggregate,
+            per_dimension_scores=per_dimension_scores,
+            eval_results=eval_results,
+            token_cost_actual=total_tokens,
+        )
 
     async def run_scenario(self, scenario: Scenario) -> Trace:
         session_id = self._agent.new_session()
