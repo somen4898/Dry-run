@@ -20,14 +20,46 @@ VARIATION_STRATEGIES = [
 
 
 class GenerateScenario(dspy.Signature):
-    """Generate a new, diverse test scenario for an AI agent based on seed examples.
-    Output ONLY valid YAML for a scenario with fields: id, name, description, persona (goal, tone, knowledge_level, background), opening_input, expectations (required_tools, required_tool_args, output_must_contain), constraints (max_turns)."""
+    """You are a test scenario designer for AI customer-support agents.
 
-    seed_scenarios: str = dspy.InputField(desc="2-3 example scenarios as YAML for reference")
-    variation_strategy: str = dspy.InputField(
-        desc="How to make the new scenario different from seeds"
+    Given seed scenarios and a variation strategy, generate ONE new test scenario.
+
+    Output ONLY raw YAML (no markdown fences, no commentary) matching this exact schema:
+
+    id: string (unique kebab-case identifier, e.g. "return-frustrated-003")
+    name: string (short descriptive name)
+    description: string (1-2 sentence scenario description)
+    persona:
+      goal: string (what the user wants to achieve)
+      tone: string (e.g. "polite", "frustrated", "casual", "demanding")
+      knowledge_level: string (e.g. "novice", "intermediate", "expert")
+      background: string (brief user background)
+      goal_reveal_strategy: string (one of: "upfront", "incremental", "evasive")
+    opening_input: string (the user's first message to the agent)
+    expectations:
+      required_tools: list of strings (tool names the agent MUST call)
+      required_tool_args: dict (specific argument values to verify, or empty {})
+      output_must_contain: list of strings (phrases that must appear in output, or [])
+    constraints:
+      max_turns: integer (4-12)
+      timeout_seconds: integer (60-180)
+      max_tokens: integer (4000-12000)
+
+    Rules:
+    - Produce valid YAML only. No markdown code fences.
+    - All fields above are required. Do not omit any.
+    - The id must be unique and different from seeds.
+    - Apply the variation_strategy to create meaningful diversity from the seeds."""
+
+    seed_scenarios: str = dspy.InputField(
+        desc="2-3 reference scenarios as YAML showing the expected format and domain"
     )
-    new_scenario: str = dspy.OutputField(desc="Complete scenario as valid YAML")
+    variation_strategy: str = dspy.InputField(
+        desc="Strategy for how this scenario should differ from the seeds"
+    )
+    new_scenario: str = dspy.OutputField(
+        desc="A single complete scenario as raw YAML matching the schema above"
+    )
 
 
 class ScenarioGenerator:

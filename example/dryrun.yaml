@@ -21,7 +21,7 @@ thresholds:
   persona_fit: 0.70
 
 store:
-  provider: "qdrant"
+  provider: "memory"
   url: "http://localhost:6333"
   collection_prefix: "dryrun_"
 

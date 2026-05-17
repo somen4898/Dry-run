@@ -16,7 +16,7 @@ class Persona(BaseModel):
 class Expectation(BaseModel):
     required_tools: list[str]
     required_tool_args: dict[str, Any]
-    terminal_state: str | None
+    terminal_state: str | None = None
     output_must_contain: list[str]
 
 
