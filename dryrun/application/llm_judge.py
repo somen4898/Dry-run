@@ -281,7 +281,9 @@ Minimum theoretical steps: {len(scenario.expectations.required_tools)} tool call
 
 Evaluate trajectory efficiency following the protocol above:"""
 
-    return await _call_judge(llm, _TRAJECTORY_EFFICIENCY_SYSTEM, user_prompt, "trajectory_efficiency")
+    return await _call_judge(
+        llm, _TRAJECTORY_EFFICIENCY_SYSTEM, user_prompt, "trajectory_efficiency"
+    )
 
 
 # =============================================================================

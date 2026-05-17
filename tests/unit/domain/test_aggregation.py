@@ -1,7 +1,7 @@
 """Tests for aggregation service."""
 
 import pytest
-from dryrun.domain.models.evaluation import DimensionScore, EvalResult
+from dryrun.domain.models.evaluation import DimensionScore
 from dryrun.domain.services.aggregation import aggregate_scores
 
 

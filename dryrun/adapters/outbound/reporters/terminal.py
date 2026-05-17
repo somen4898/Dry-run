@@ -4,7 +4,6 @@ from __future__ import annotations
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from rich.text import Text
 from dryrun.domain.models.evaluation import EvalResult, RunResult
 from dryrun.domain.ports.reporter import ReporterPort
 
@@ -16,7 +15,9 @@ class TerminalReporter(ReporterPort):
     def report_scenario(self, result: EvalResult) -> None:
         """Print a single scenario result as a compact table."""
         status = "[bold green]PASS[/]" if result.passed else "[bold red]FAIL[/]"
-        self._console.print(f"\n{status} {result.scenario_id} (score: {result.aggregate_score:.2f})")
+        self._console.print(
+            f"\n{status} {result.scenario_id} (score: {result.aggregate_score:.2f})"
+        )
 
         table = Table(show_header=True, header_style="bold", box=None, padding=(0, 2))
         table.add_column("Dimension", style="cyan")
@@ -41,16 +42,20 @@ class TerminalReporter(ReporterPort):
         self._console.print("\n")
 
         # Header
-        overall = "[bold green]SUITE PASSED[/]" if result.failed == 0 else "[bold red]SUITE FAILED[/]"
-        self._console.print(Panel(
-            f"{overall}\n"
-            f"Scenarios: {result.total_scenarios} total, "
-            f"[green]{result.passed} passed[/], [red]{result.failed} failed[/]\n"
-            f"Aggregate Score: {result.aggregate_score:.2f}\n"
-            f"Tokens Used: {result.token_cost_actual:,}",
-            title="Evaluation Report",
-            border_style="blue",
-        ))
+        overall = (
+            "[bold green]SUITE PASSED[/]" if result.failed == 0 else "[bold red]SUITE FAILED[/]"
+        )
+        self._console.print(
+            Panel(
+                f"{overall}\n"
+                f"Scenarios: {result.total_scenarios} total, "
+                f"[green]{result.passed} passed[/], [red]{result.failed} failed[/]\n"
+                f"Aggregate Score: {result.aggregate_score:.2f}\n"
+                f"Tokens Used: {result.token_cost_actual:,}",
+                title="Evaluation Report",
+                border_style="blue",
+            )
+        )
 
         # Per-dimension averages
         if result.per_dimension_scores:

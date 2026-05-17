@@ -36,9 +36,13 @@ class Evaluator:
         # 1. Deterministic scorers (sync, instant)
         deterministic = [
             score_tool_correctness(trace, scenario.expectations, thresholds.tool_correctness),
-            score_argument_correctness(trace, scenario.expectations, thresholds.argument_correctness),
+            score_argument_correctness(
+                trace, scenario.expectations, thresholds.argument_correctness
+            ),
             score_step_efficiency(trace, thresholds.step_efficiency),
-            score_constraint_adherence(trace, scenario.constraints, thresholds.constraint_adherence),
+            score_constraint_adherence(
+                trace, scenario.constraints, thresholds.constraint_adherence
+            ),
         ]
 
         # 2. LLM judges (async, concurrent)

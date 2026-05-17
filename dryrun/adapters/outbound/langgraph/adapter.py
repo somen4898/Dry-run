@@ -1,7 +1,6 @@
 """LangGraphAdapter — implements AgentPort for LangGraph compiled graphs."""
 
 from __future__ import annotations
-import asyncio
 import logging
 import time
 import uuid
@@ -101,7 +100,9 @@ class LangGraphAdapter(AgentPort):
                 if getattr(msg, "type", None) == "ai" and not getattr(msg, "tool_calls", None):
                     # Filter out routing instructions from visible output
                     lines = content.split("\n")
-                    visible_lines = [l for l in lines if not l.strip().startswith("ROUTE:")]
+                    visible_lines = [
+                        line for line in lines if not line.strip().startswith("ROUTE:")
+                    ]
                     filtered = "\n".join(visible_lines).strip()
                     if filtered:
                         visible_parts.insert(0, filtered)

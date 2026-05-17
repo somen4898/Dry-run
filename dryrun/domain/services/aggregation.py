@@ -28,4 +28,6 @@ def aggregate_scores(
 
     passed = aggregate >= aggregate_threshold and all_pass
 
-    return EvalResult(scenario_id="", passed=passed, aggregate_score=aggregate, dimensions=updated_dims)
+    return EvalResult(
+        scenario_id="", passed=passed, aggregate_score=aggregate, dimensions=updated_dims
+    )

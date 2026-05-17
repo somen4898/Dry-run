@@ -77,9 +77,7 @@ def _make_mock_run_scenario():
         """Return a trace with tools that partially match expectations."""
         # Use first 2 required tools from the scenario
         tool_calls = [
-            ToolCall(
-                tool_name=t, arguments={}, output={"success": True}, latency_ms=100
-            )
+            ToolCall(tool_name=t, arguments={}, output={"success": True}, latency_ms=100)
             for t in scenario.expectations.required_tools[:2]
         ]
 

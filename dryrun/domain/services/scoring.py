@@ -246,9 +246,7 @@ def score_constraint_adherence(
     # Turns: binary penalty (discrete constraint)
     if trace.total_turns > constraints.max_turns:
         penalty += 0.33
-        violations.append(
-            f"Exceeded max turns: {trace.total_turns}/{constraints.max_turns}"
-        )
+        violations.append(f"Exceeded max turns: {trace.total_turns}/{constraints.max_turns}")
 
     # Timeout: proportional penalty (continuous constraint)
     timeout_ms = constraints.timeout_seconds * 1000

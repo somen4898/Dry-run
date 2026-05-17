@@ -2,14 +2,12 @@
 
 import json
 import pytest
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
-from dryrun.domain.models.scenario import Scenario, Persona, Expectation, Constraints
+from unittest.mock import AsyncMock, MagicMock
 from dryrun.domain.models.trace import Trace, AgentTurn, ToolCall
-from dryrun.domain.models.evaluation import EvalResult, DimensionScore, RunResult
+from dryrun.domain.models.evaluation import RunResult
 from dryrun.domain.ports.llm import LLMPort
 from dryrun.domain.ports.agent import AgentPort
-from dryrun.config import DryRunConfig, ThresholdsConfig
+from dryrun.config import DryRunConfig
 from dryrun.application.run_suite import RunSuiteUseCase
 
 
@@ -71,13 +69,26 @@ class TestRunSuite:
         # Mock the run_scenario method to return a fake trace
         mock_trace = Trace(
             scenario_id="s1",
-            turns=[AgentTurn(
-                turn_number=1, agent_id="a", input_text="Hi", output_text="Hello",
-                tool_calls=[ToolCall(tool_name="search", arguments={}, output={}, latency_ms=100)],
-                state_before={}, state_after={}, latency_ms=200, tokens_used=100,
-                visible_output_text="Hello",
-            )],
-            final_state={}, total_turns=1, total_tokens=100, total_latency_ms=200,
+            turns=[
+                AgentTurn(
+                    turn_number=1,
+                    agent_id="a",
+                    input_text="Hi",
+                    output_text="Hello",
+                    tool_calls=[
+                        ToolCall(tool_name="search", arguments={}, output={}, latency_ms=100)
+                    ],
+                    state_before={},
+                    state_after={},
+                    latency_ms=200,
+                    tokens_used=100,
+                    visible_output_text="Hello",
+                )
+            ],
+            final_state={},
+            total_turns=1,
+            total_tokens=100,
+            total_latency_ms=200,
             terminal_reason="goal_met",
         )
 
@@ -102,13 +113,24 @@ class TestRunSuite:
 
         mock_trace = Trace(
             scenario_id="s1",
-            turns=[AgentTurn(
-                turn_number=1, agent_id="a", input_text="Hi", output_text="Hello",
-                tool_calls=[],
-                state_before={}, state_after={}, latency_ms=200, tokens_used=100,
-                visible_output_text="Hello",
-            )],
-            final_state={}, total_turns=1, total_tokens=100, total_latency_ms=200,
+            turns=[
+                AgentTurn(
+                    turn_number=1,
+                    agent_id="a",
+                    input_text="Hi",
+                    output_text="Hello",
+                    tool_calls=[],
+                    state_before={},
+                    state_after={},
+                    latency_ms=200,
+                    tokens_used=100,
+                    visible_output_text="Hello",
+                )
+            ],
+            final_state={},
+            total_turns=1,
+            total_tokens=100,
+            total_latency_ms=200,
             terminal_reason="goal_met",
         )
 
@@ -119,6 +141,6 @@ class TestRunSuite:
         )
         use_case.run_scenario = AsyncMock(return_value=mock_trace)
 
-        result = await use_case.run_suite(scenarios_dir)
+        await use_case.run_suite(scenarios_dir)
         # Should have called run_scenario twice (once per yaml file)
         assert use_case.run_scenario.call_count == 2

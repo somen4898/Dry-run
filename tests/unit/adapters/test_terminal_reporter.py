@@ -1,8 +1,6 @@
 """Tests for TerminalReporter."""
 
 import pytest
-from io import StringIO
-from unittest.mock import patch
 from dryrun.domain.models.evaluation import DimensionScore, EvalResult, RunResult
 from dryrun.adapters.outbound.reporters.terminal import TerminalReporter
 
@@ -14,7 +12,9 @@ def eval_result() -> EvalResult:
         passed=True,
         aggregate_score=0.85,
         dimensions=[
-            DimensionScore(dimension="tool_correctness", score=0.9, passed=True, reason="All tools called"),
+            DimensionScore(
+                dimension="tool_correctness", score=0.9, passed=True, reason="All tools called"
+            ),
             DimensionScore(dimension="goal_achievement", score=0.8, passed=True, reason="Goal met"),
         ],
     )
@@ -37,8 +37,12 @@ def run_result(eval_result) -> RunResult:
                 passed=False,
                 aggregate_score=0.55,
                 dimensions=[
-                    DimensionScore(dimension="tool_correctness", score=0.8, passed=True, reason="OK"),
-                    DimensionScore(dimension="goal_achievement", score=0.3, passed=False, reason="Goal not met"),
+                    DimensionScore(
+                        dimension="tool_correctness", score=0.8, passed=True, reason="OK"
+                    ),
+                    DimensionScore(
+                        dimension="goal_achievement", score=0.3, passed=False, reason="Goal not met"
+                    ),
                 ],
             ),
         ],
@@ -59,5 +63,6 @@ class TestTerminalReporter:
 
     def test_implements_reporter_port(self):
         from dryrun.domain.ports.reporter import ReporterPort
+
         reporter = TerminalReporter()
         assert isinstance(reporter, ReporterPort)

@@ -88,7 +88,9 @@ def run(scenario_path: str, config_path: str | None, max_concurrent: int):
 
         console.print(f"\n[bold]Running scenario:[/bold] {scenario.name}")
         console.print(f"[dim]ID: {scenario.id}[/dim]")
-        console.print(f"[dim]Persona: {scenario.persona.tone} {scenario.persona.knowledge_level}[/dim]")
+        console.print(
+            f"[dim]Persona: {scenario.persona.tone} {scenario.persona.knowledge_level}[/dim]"
+        )
         console.print(f"[dim]Goal reveal: {scenario.persona.goal_reveal_strategy}[/dim]\n")
 
         trace = asyncio.run(runner.run_scenario(scenario))

@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 class RunSuiteUseCase:
-    def __init__(self, agent_port: AgentPort, llm_port: LLMPort, config: DryRunConfig | None = None):
+    def __init__(
+        self, agent_port: AgentPort, llm_port: LLMPort, config: DryRunConfig | None = None
+    ):
         self._agent = agent_port
         self._llm = llm_port
         self._config = config or DryRunConfig(agent_module="", agent_object="")
@@ -47,8 +49,12 @@ class RunSuiteUseCase:
             async with semaphore:
                 logger.info("Starting scenario: %s", scenario.id)
                 trace = await self.run_scenario(scenario)
-                result = await evaluator.evaluate(trace, scenario, self._llm, self._config.thresholds)
-                logger.info("Finished scenario: %s (%s)", scenario.id, "PASS" if result.passed else "FAIL")
+                result = await evaluator.evaluate(
+                    trace, scenario, self._llm, self._config.thresholds
+                )
+                logger.info(
+                    "Finished scenario: %s (%s)", scenario.id, "PASS" if result.passed else "FAIL"
+                )
                 return result, trace.total_tokens
 
         results = await asyncio.gather(*[_run_and_evaluate(s) for s in scenarios])
@@ -64,7 +70,11 @@ class RunSuiteUseCase:
 
         passed_count = sum(1 for r in eval_results if r.passed)
         failed_count = len(eval_results) - passed_count
-        aggregate = sum(r.aggregate_score for r in eval_results) / len(eval_results) if eval_results else 0.0
+        aggregate = (
+            sum(r.aggregate_score for r in eval_results) / len(eval_results)
+            if eval_results
+            else 0.0
+        )
 
         return RunResult(
             run_id=str(uuid4()),
