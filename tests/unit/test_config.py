@@ -29,8 +29,8 @@ class TestDryRunConfig:
         )
         assert config.scenarios_dir == "scenarios/"
         assert config.models.provider == "anthropic"
-        assert config.models.synthetic_user == "claude-sonnet-4-6"
-        assert config.models.agent == "claude-sonnet-4-6"
+        assert config.models.synthetic_user == "claude-haiku-4-5"
+        assert config.models.agent == "claude-haiku-4-5"
 
 
 class TestThresholdsConfig:

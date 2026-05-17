@@ -9,9 +9,9 @@ import yaml
 
 class ModelConfig(BaseModel):
     provider: Literal["openai", "anthropic"] = "anthropic"
-    synthetic_user: str = "claude-sonnet-4-6"
-    agent: str = "claude-sonnet-4-6"
-    judge: str = "claude-sonnet-4-6"
+    synthetic_user: str = "claude-haiku-4-5"
+    agent: str = "claude-haiku-4-5"
+    judge: str = "claude-haiku-4-5"
     generator: str = "claude-haiku-4-5"
 
 
