@@ -12,6 +12,18 @@ class ModelConfig(BaseModel):
     synthetic_user: str = "claude-sonnet-4-6"
     agent: str = "claude-sonnet-4-6"
     judge: str = "claude-sonnet-4-6"
+    generator: str = "claude-haiku-4-5"
+
+
+class StoreConfig(BaseModel):
+    provider: Literal["qdrant", "memory"] = "qdrant"
+    url: str = "http://localhost:6333"
+    collection_prefix: str = "dryrun_"
+
+
+class GateConfig(BaseModel):
+    regression_threshold: float = 0.05
+    golden_must_pass: bool = True
 
 
 class ThresholdsConfig(BaseModel):
@@ -31,6 +43,8 @@ class DryRunConfig(BaseModel):
     scenarios_dir: str = "scenarios/"
     models: ModelConfig = ModelConfig()
     thresholds: ThresholdsConfig = ThresholdsConfig()
+    store: StoreConfig = StoreConfig()
+    gate: GateConfig = GateConfig()
 
     @classmethod
     def from_yaml(cls, path: Path) -> DryRunConfig:
