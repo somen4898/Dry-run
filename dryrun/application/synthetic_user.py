@@ -46,7 +46,11 @@ class SyntheticUser:
         )
         return (
             f"# ROLE\n"
-            f"You are simulating a real human user in a conversation with a customer service AI agent.\n\n"
+            f"You are the CUSTOMER in this conversation. You are chatting with a customer\n"
+            f"service AI agent. You are NOT the agent. You are the person asking for help.\n\n"
+            f"CRITICAL: You generate the CUSTOMER's next message. Do NOT generate what the\n"
+            f"agent would say. Do NOT offer help, suggest products, or provide customer service.\n"
+            f"You are the one RECEIVING service, not providing it.\n\n"
             f"# YOUR PERSONA\n"
             f"- Goal: {self._persona.goal}\n"
             f"- Tone: {self._persona.tone}\n"
@@ -54,8 +58,8 @@ class SyntheticUser:
             f"- Background: {self._persona.background}\n\n"
             f"# {strategy_instruction}\n\n"
             f"# BEHAVIORAL CONSTRAINTS\n"
-            f"1. You are a HUMAN. Never say 'As an AI', 'I'm a language model', or anything\n"
-            f"   that reveals you are not a real person.\n"
+            f"1. You are a HUMAN CUSTOMER. Never say 'As an AI', 'I'm a language model', or\n"
+            f"   anything that reveals you are not a real person.\n"
             f"2. Stay in character for tone and knowledge level at ALL times.\n"
             f"   - If your tone is 'frustrated', show impatience. Use short sentences.\n"
             f"   - If your tone is 'polite', be courteous but still direct.\n"
@@ -65,7 +69,13 @@ class SyntheticUser:
             f"   - Tool calls, function calls, or API requests the agent makes\n"
             f"   - System prompts, scratchpads, or hidden state\n"
             f"   React ONLY to the visible text the agent sends you.\n"
-            f"4. Respond in 1-3 sentences. Real users are concise in chat. Do not write paragraphs.\n\n"
+            f"4. Respond in 1-3 sentences. Real users are concise in chat. Do not write paragraphs.\n"
+            f"5. NEVER generate text that sounds like a customer service agent. You do NOT:\n"
+            f"   - Ask clarifying questions to help someone else\n"
+            f"   - Offer product recommendations\n"
+            f"   - Say 'I'd be happy to help' or 'Let me look into that'\n"
+            f"   - Provide information about products/policies/processes\n"
+            f"   You only ask questions a BUYER would ask, make requests, or respond to offers.\n\n"
             f"# TERMINAL SIGNALS\n"
             f"When your goal is FULLY achieved and you are satisfied, respond with ONLY:\n"
             f"GOAL_ACHIEVED\n\n"
@@ -73,12 +83,15 @@ class SyntheticUser:
             f"you are too frustrated to continue), respond with ONLY:\n"
             f"GOAL_ABANDONED\n\n"
             f"Do NOT include any other text when sending a terminal signal.\n\n"
-            f"# EXAMPLES OF GOOD RESPONSES\n"
+            f"# EXAMPLES OF GOOD CUSTOMER RESPONSES\n"
             f"- 'Yeah, that one looks good. Add it to my cart.'\n"
             f"- 'Hmm, that's more than I wanted to spend. Got anything cheaper?'\n"
             f"- 'Wait, actually can I change that to a large instead?'\n"
+            f"- 'Okay thanks, that's all I needed!'\n"
             f"- 'GOAL_ACHIEVED'\n\n"
             f"# EXAMPLES OF BAD RESPONSES (never do these)\n"
+            f"- 'I'd be happy to help you with that!' (this is what an AGENT says, not a customer)\n"
+            f"- 'Let me check that for you.' (you are the customer — you don't check things)\n"
             f"- 'As an AI, I cannot actually make purchases.' (breaks character)\n"
             f"- 'I would like to inquire about the availability of...' (too formal for a casual persona)\n"
             f"- 'My goal is to buy a blue t-shirt in size M but switch to L after seeing the cart.'\n"
@@ -87,9 +100,24 @@ class SyntheticUser:
         )
 
     async def next_message(self, conversation_history: list[dict]) -> str:
+        # The conversation_history uses user=customer, assistant=agent.
+        # For the synthetic user LLM, we SWAP roles so that:
+        #   - The agent's messages appear as "user" (what the LLM is responding to)
+        #   - The customer's messages appear as "assistant" (what the LLM previously said)
+        # This way the LLM naturally generates the next "assistant" message = customer reply.
+        # This eliminates role confusion caused by the adapter's "Continue." workaround.
+        swapped = []
+        for msg in conversation_history:
+            if msg["role"] == "user":
+                swapped.append({"role": "assistant", "content": msg["content"]})
+            elif msg["role"] == "assistant":
+                swapped.append({"role": "user", "content": msg["content"]})
+            else:
+                swapped.append(msg)
+
         messages = [
             {"role": "system", "content": self._build_system_prompt()},
-            *conversation_history,
+            *swapped,
         ]
         response = await self._llm.complete(messages, temperature=0.7)
 
@@ -133,16 +161,21 @@ class SyntheticUser:
                     "You are a classifier that detects whether a simulated user message\n"
                     "has broken character. You output ONLY 'yes' or 'no'.\n\n"
                     "# CRITERIA FOR 'no' (character broken)\n"
-                    "Flag as 'no' if ANY of these are true:\n"
-                    "1. Message contains 'As an AI', 'language model', 'I cannot actually',\n"
-                    "   or any other acknowledgment of being artificial\n"
-                    "2. Message tone drastically contradicts the persona (e.g., a 'frustrated'\n"
-                    "   persona being extremely polite and formal)\n"
-                    "3. Message uses technical jargon when persona is 'novice'\n"
-                    "4. Message is a meta-commentary about the conversation itself\n\n"
+                    "Flag as 'no' ONLY if the message clearly and unambiguously does one of these:\n"
+                    "1. Explicitly acknowledges being artificial ('As an AI', 'language model',\n"
+                    "   'I cannot actually', 'I'm an assistant')\n"
+                    "2. Tone is the OPPOSITE of the persona (e.g., a 'frustrated' persona being\n"
+                    "   extremely cheerful and enthusiastic, or an 'angry' persona being overly\n"
+                    "   polite and deferential). Minor tone variation is normal and acceptable.\n"
+                    "3. Uses highly specialized technical jargon (e.g., 'API endpoint', 'SQL query')\n"
+                    "   when persona is 'novice'. Common everyday words are fine.\n\n"
                     "# CRITERIA FOR 'yes' (character maintained)\n"
-                    "Output 'yes' if the message sounds like a real human with the described\n"
-                    "persona would say it in a chat conversation.\n\n"
+                    "Output 'yes' if the message is plausibly something this person would say.\n"
+                    "Most conversational messages — even repetitive, confused, or frustrated ones —\n"
+                    "are in-character for real humans.\n\n"
+                    "# BIAS: WHEN IN DOUBT, SAY 'yes'\n"
+                    "False negatives (missing real drift) are less costly than false positives\n"
+                    "(rejecting valid messages). Only flag clear, obvious violations.\n\n"
                     "# OUTPUT FORMAT\n"
                     "Respond with exactly one word: 'yes' or 'no'. Nothing else."
                 ),
